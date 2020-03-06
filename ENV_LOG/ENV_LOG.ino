@@ -232,7 +232,7 @@ void loop() {
     px++;
     if(px>319){
       px=0;
-      M5.Lcd.fillTriangle(319-5, 100, 319+5, 100, 319, 110, BLACK);
+      M5.Lcd.fillTriangle(319-6, 100, 319+5, 100, 319, 110, BLACK);
       M5.Lcd.drawLine(319,240,319,110,BLACK); // ライン消去
     }
 
