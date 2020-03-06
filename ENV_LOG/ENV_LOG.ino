@@ -23,14 +23,23 @@ unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 const char* WiFiFile = "/wifi.csv";
 
+//グラフの描画レンジ設定
+#define TMP_MIN -10.0
+#define TMP_MAX 40.0
+
+#define HUM_MIN 0
+#define HUM_MAX 100
+
+#define PRS_MIN 950
+#define PRS_MAX 1050
 
 
 // === グローバル変数、定数
 DHT12 dht12; //Preset scale CELSIUS and ID 0x5c.
 Adafruit_BMP280 bme;
 
-#define TEMP_COLOR  GREENYELLOW
-#define HUME_COLOR  BLUE
+#define TEMP_COLOR  YELLOW
+#define HUME_COLOR  GREEN
 #define PRES_COLOR  DARKGREY
 #define BATT_COLOR  RED
 
@@ -213,11 +222,21 @@ void loop() {
     M5.Lcd.setTextColor(BATT_COLOR, BLACK);  // 色
     M5.Lcd.printf("Batt: %d%%",batt);
 
-    //グラフ表示
 
-    pty = 240-(int)(tmp+20); // マイナス２０度が一番下になる。
-    phy = 240 - (int)(hum+50); // 
-    ppy = 240 - (int)(pressure - 950);
+    //グラフ表示
+    float TmpRangeDelta = 120.0/(TMP_MAX - TMP_MIN);
+    float tmpY = TmpRangeDelta * tmp;
+    pty = 240-(int)tmpY;
+
+    phy = 210 - (int)(hum); // 0-100%なので
+
+
+    float PPreDelta = 120.0/(PRS_MAX - PRS_MIN);
+    float preY = PPreDelta * (float)(pressure-PRS_MIN);
+
+    //ppy = 240 - (int)(pressure - 950);
+    ppy = 240 - (int)(preY);
+
     //pty = 120;
 
     M5.Lcd.drawLine(px,240,px,120,BLACK); // まずライン消去
@@ -229,7 +248,19 @@ void loop() {
     M5.Lcd.fillTriangle(px-5, 100, px+5, 100, px, 110, WHITE);
     M5.Lcd.drawLine(px-5-1,100,px-1, 115, BLACK);
 
-    px++;
+    //時間
+    long tx = timeinfo.tm_hour * 24 +timeinfo.tm_min*60+timeinfo.tm_sec;
+
+//    px++;
+    px = (int)(tx / 270);
+
+    M5.Lcd.setCursor(0, 200); // カーソル
+    M5.Lcd.setTextSize(1);  // 文字サイズ
+    //M5.Lcd.printf("tx:%d\n", tx);
+    //M5.Lcd.printf("px:%d\n", px);
+
+    
+    
     if(px>319){
       px=0;
       M5.Lcd.fillTriangle(319-6, 100, 319+5, 100, 319, 110, BLACK);
