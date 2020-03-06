@@ -60,6 +60,9 @@ void setup() {
 
     if(SetwifiSD(WiFiFile)){
       M5.Lcd.println("Connect!");
+      // timeSet
+      getTimeFromNTP(); // コネクトしたらNTPを見に行く。（接続できなかったらtimeinfoが0になり、日付が1970/1/1になる）
+
     }else{
       M5.Lcd.println("No Connect!");            
     }
@@ -73,8 +76,6 @@ void setup() {
     M5.Lcd.println("\nWiFi connected.");
 */
   
-    // timeSet
-    getTimeFromNTP();
 
     Wire.begin();
     
