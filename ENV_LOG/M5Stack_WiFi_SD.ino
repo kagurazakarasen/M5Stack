@@ -1,5 +1,14 @@
+/* 
+ *  『M5StackのWiFIクライアント設定をSDカードから読み込んで利用する』@kmaepu
+ *  https://qiita.com/kmaepu/items/c390d80973efa316ca4a　より。
+ *　基本は生かしてENV_LOG用に改修　＠ 神楽坂らせん
+ */
+
+/*
 #include <M5Stack.h>
 #include <WiFi.h>
+*/
+
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
@@ -10,12 +19,18 @@ File fp;
 char ssid[32];
 char pass[32];
 
-void SetwifiSD(const char *file){
+boolean SetwifiSD(const char *file){  // タイムアウト確認用に戻り値を設定
   unsigned int cnt = 0;
   char data[64];
   char *str;
 
   fp = SD.open(file, FILE_READ); // fname だったのを file に変更  
+  if(fp != true){                // エラー処理
+    M5.Lcd.printf("WiFi FileOpenError!!");
+    delay(1000);
+    return false;
+  }
+  
   while(fp.available()){
     data[cnt++] = fp.read();
   }
@@ -37,9 +52,17 @@ void SetwifiSD(const char *file){
   // STA設定
   WiFi.mode(WIFI_STA);     // STAモードで動作
   WiFi.begin(ssid, pass);
+  unsigned int failCnt = 0; // 失敗用カウンタ
   while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
+      failCnt++;
+      if(failCnt> 50){
+        M5.Lcd.printf("WiFi Timed Out!!");
+        delay(1000);
+
+        return false;
+      }
   }
 
   M5.Lcd.print("IP: ");
@@ -47,6 +70,8 @@ void SetwifiSD(const char *file){
   Serial.printf("IP: ");
   Serial.println(WiFi.localIP());
   fp.close();
+
+  return true;
 }
 
 /*

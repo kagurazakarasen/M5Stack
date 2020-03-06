@@ -57,7 +57,12 @@ void setup() {
     M5.Lcd.setBrightness(10);
 
     M5.Lcd.println("WiFi begin");
-    SetwifiSD(WiFiFile); // Get ssid
+
+    if(SetwifiSD(WiFiFile)){
+      M5.Lcd.println("Connect!");
+    }else{
+      M5.Lcd.println("No Connect!");            
+    }
 /*
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
