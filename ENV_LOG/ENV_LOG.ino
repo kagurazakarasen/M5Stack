@@ -8,19 +8,17 @@
 
 
 // ファイル保存するかどうか。ファイルに保存するならここを true にする
-#define FILEWRITE true
+boolean FILEWRITE = true;
 
 // 保存するファイル名
 const char* fname = "/env_log.csv";
 
 // ループのウェイト、何秒待つかをミリ秒で指定
-const long DELAY = 60000;    // ミリ秒
+long DELAY = 1000;    // ミリ秒
 
-/*
-// WiFiの設定 （XXXのところを自分のWiFiの設定に）
-char ssid[] = "XXXXXXXXXXXXX";
-char pass[] = "XXXXXXXXXXXXX";
-*/
+//何秒に一度SDカードにログを書き込むか（そのタイミングで取得したデータのみ） 
+long LOG_WRITE_RATE = 60;  // 秒
+long LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 const char* WiFiFile = "/wifi.csv";
 
@@ -66,17 +64,7 @@ void setup() {
     }else{
       M5.Lcd.println("No Connect!");            
     }
-/*
-    WiFi.begin(ssid, pass);
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      M5.Lcd.print(".");
-    }
-    
-    M5.Lcd.println("\nWiFi connected.");
-*/
   
-
     Wire.begin();
     
     // ENV Unit Check
@@ -89,6 +77,11 @@ void setup() {
     // LCD初期化
     M5.Lcd.clear(BLACK);
     M5.Lcd.println("ENV Unit test...");
+
+    // ログ書き込み用カウンタ
+    LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
+    if(LOG_WRITE_RATE_COUNT<1)LOG_WRITE_RATE_COUNT=1;
+
 }
 
 void getTime(){
@@ -168,12 +161,20 @@ void loop() {
     // 温度、湿度、気圧、バッテリー情報
     M5.Lcd.printf("Temp:%2.1f \nHumi:%2.0f%% \nPres:%2.0fhPa \nBatt: %d%%", tmp, hum, pressure,batt);
 
-#if FILEWRITE
-    // ファイル出力
-    sprintf(buff,"%2.1f ,%2.0f% ,%2.0f, %d%", tmp, hum, pressure,batt);
-    writeData(buff);
-#endif
+    //ログファイル出力
+    if (FILEWRITE){
+       LOG_WRITE_RATE_COUNT--;  //カウンタをデクリメント
+       if( LOG_WRITE_RATE_COUNT < 1 ){
+          sprintf(buff,"%2.1f ,%2.0f% ,%2.0f, %d%", tmp, hum, pressure,batt);
+          writeData(buff);
 
+          // ログ書き込み用カウンタリセット
+          LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
+          if(LOG_WRITE_RATE_COUNT<1)LOG_WRITE_RATE_COUNT=1;
+
+       }
+    }
+    
     // ボタンイベント処理
     //Aボタンを押したときに明るくするテスト。今はDELAYの切り替わりのタイミングでしか動作しない
     if (M5.BtnA.wasPressed()) {
