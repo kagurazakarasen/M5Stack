@@ -239,7 +239,7 @@ void loop() {
 
     //pty = 120;
 
-    M5.Lcd.drawLine(px,240,px,120,BLACK); // まずライン消去
+    M5.Lcd.drawLine(px+1,240,px+1,110,BLACK); // まずライン消去
     
     M5.Lcd.drawPixel(px, pty, TEMP_COLOR );
     M5.Lcd.drawPixel(px, phy, HUME_COLOR);
@@ -249,15 +249,16 @@ void loop() {
     M5.Lcd.drawLine(px-5-1,100,px-1, 115, BLACK);
 
     //時間
-    long tx = timeinfo.tm_hour * 24 +timeinfo.tm_min*60+timeinfo.tm_sec;
+    //long tx = timeinfo.tm_hour * 24 +timeinfo.tm_min*60+timeinfo.tm_sec;
+    long tx =3600*timeinfo.tm_hour + 60*timeinfo.tm_min+timeinfo.tm_sec;
 
 //    px++;
     px = (int)(tx / 270);
 
     M5.Lcd.setCursor(0, 200); // カーソル
     M5.Lcd.setTextSize(1);  // 文字サイズ
-    //M5.Lcd.printf("tx:%d\n", tx);
-    //M5.Lcd.printf("px:%d\n", px);
+    M5.Lcd.printf("tx:%d\n", tx);
+    M5.Lcd.printf("px:%d\n", px);
 
     
     
