@@ -10,5 +10,20 @@ UNV UNITを使った環境データのロギング
 
 詳しくは、
 https://note.com/rasen/n/naa51e575b0e4
-
 をご参照ください。
+
+ここに入れてある
+
+* Adafruit_Sensor.h
+* DHT12.cpp
+* DHT12.h
+
+は、
+
+https://github.com/nishizumi-lab
+
+の
+
+https://github.com/nishizumi-lab/sample/tree/master/m5stack/bmp280/arduino/bmp280
+
+からいただいています。
