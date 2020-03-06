@@ -5,6 +5,7 @@
 #include <Adafruit_BMP280.h>
 #include <WiFi.h>
 #include <time.h>
+#include <string.h>
 
 
 // ファイル保存するかどうか。ファイルに保存するならここを true にする
@@ -14,11 +15,11 @@ boolean FILEWRITE = true;
 const char* fname = "/env_log.csv";
 
 // ループのウェイト、何秒待つかをミリ秒で指定
-long DELAY = 1000;    // ミリ秒
+unsigned long int DELAY = 1000;    // ミリ秒
 
 //何秒に一度SDカードにログを書き込むか（そのタイミングで取得したデータのみ） 
-long LOG_WRITE_RATE = 60;  // 秒
-long LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
+unsigned int LOG_WRITE_RATE = 10;  // （秒）↓が割り切れる値にしてね。
+unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 const char* WiFiFile = "/wifi.csv";
 
@@ -36,8 +37,10 @@ char ntpServer[] = "ntp.jst.mfeed.ad.jp";   // ntpサーバ
 const long gmtOffset_sec = 9 * 3600;
 const int  daylightOffset_sec = 0;
 struct tm timeinfo;
-String dateStr;
-String timeStr;
+//String dateStr;
+//String timeStr;
+char dateS[12];
+char timeS[12];
 
 File file;
 
@@ -86,18 +89,33 @@ void setup() {
 
 void getTime(){
   // 時刻の取得と表示
+
+  //char timeS[12];
+  //char dateS[12];
   getLocalTime(&timeinfo);
+  /*
   dateStr = (String)(timeinfo.tm_year + 1900)
           + "/" + (String)(timeinfo.tm_mon + 1)
           + "/" + (String)timeinfo.tm_mday;
+
   timeStr = (String)timeinfo.tm_hour
           + ":" + (String)timeinfo.tm_min
           + ":" + (String)timeinfo.tm_sec;
+  */
+  
+  sprintf(dateS,"%04d/%02d/%02d",timeinfo.tm_year + 1900,timeinfo.tm_mon + 1,timeinfo.tm_mday);
+  sprintf(timeS,"%02d:%02d:%02d",timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
   //M5.Lcd.setTextColor(WHITE,BLACK);
   //M5.Lcd.setCursor(0, 200, 1);
-  M5.Lcd.println(dateStr + "   ");
-  M5.Lcd.println(timeStr + "   ");
+//  M5.Lcd.println(dateStr + "   ");
+//  M5.Lcd.println(timeStr + "   ");
+
+  M5.Lcd.println(dateS);
+  M5.Lcd.println(timeS);
+
+  //dateStr = String(dateS);  //これでいけるけど無駄なので整理
+  //timeStr = String(timeS);
 }
 
 
@@ -128,7 +146,7 @@ void writeData(char *paramStr) {
   // SDカードへの書き込み処理（ファイル追加モード）
   // SD.beginはM5.begin内で処理されているので不要
   file = SD.open(fname, FILE_APPEND);
-  file.println(dateStr + "," + timeStr + "," + paramStr);
+  file.println((String)dateS + "," + (String)timeS + "," + paramStr);
   file.close();
 }
 
@@ -164,7 +182,10 @@ void loop() {
     //ログファイル出力
     if (FILEWRITE){
        LOG_WRITE_RATE_COUNT--;  //カウンタをデクリメント
+       //M5.Lcd.printf(":%d",LOG_WRITE_RATE_COUNT);
        if( LOG_WRITE_RATE_COUNT < 1 ){
+         // M5.Lcd.printf("*");
+
           sprintf(buff,"%2.1f ,%2.0f% ,%2.0f, %d%", tmp, hum, pressure,batt);
           writeData(buff);
 
