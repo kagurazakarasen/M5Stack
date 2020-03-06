@@ -18,7 +18,7 @@ const char* fname = "/env_log.csv";
 unsigned long int DELAY = 1000;    // ミリ秒
 
 //何秒に一度SDカードにログを書き込むか（そのタイミングで取得したデータのみ） 
-unsigned int LOG_WRITE_RATE = 10;  // （秒）↓が割り切れる値にしてね。
+unsigned int LOG_WRITE_RATE = 60;  // （秒）↓が割り切れる値にしてね。
 unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 const char* WiFiFile = "/wifi.csv";
@@ -28,6 +28,21 @@ const char* WiFiFile = "/wifi.csv";
 // === グローバル変数、定数
 DHT12 dht12; //Preset scale CELSIUS and ID 0x5c.
 Adafruit_BMP280 bme;
+
+#define TEMP_COLOR  GREENYELLOW
+#define HUME_COLOR  BLUE
+#define PRES_COLOR  DARKGREY
+#define BATT_COLOR  RED
+
+//グラフ用
+int16_t px = 0; // 表示用x座標
+int16_t pty = 120; // 温度表示用y座標
+int16_t phy = 120; // 温度表示用y座標
+int16_t ppy = 120; // 温度表示用y座標
+
+// スクリーンセーバー用カウンタ
+#define SCC_MAX 100
+int16_t scc = SCC_MAX;
 
 // === 関数プロトタイプ宣言
 uint8_t getBattery(uint16_t, uint16_t);
@@ -55,7 +70,8 @@ void getTimeFromNTP(){
 void setup() {
     M5.begin();
 
-    M5.Lcd.setBrightness(10);
+    //M5.Lcd.setBrightness(10);
+    M5.Lcd.setBrightness(100);
 
     M5.Lcd.println("WiFi begin");
 
@@ -78,8 +94,8 @@ void setup() {
       M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
     }
     // LCD初期化
-    M5.Lcd.clear(BLACK);
     M5.Lcd.println("ENV Unit test...");
+    M5.Lcd.clear(BLACK);
 
     // ログ書き込み用カウンタ
     LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
@@ -93,26 +109,24 @@ void getTime(){
   //char timeS[12];
   //char dateS[12];
   getLocalTime(&timeinfo);
-  /*
-  dateStr = (String)(timeinfo.tm_year + 1900)
-          + "/" + (String)(timeinfo.tm_mon + 1)
-          + "/" + (String)timeinfo.tm_mday;
-
-  timeStr = (String)timeinfo.tm_hour
-          + ":" + (String)timeinfo.tm_min
-          + ":" + (String)timeinfo.tm_sec;
-  */
   
   sprintf(dateS,"%04d/%02d/%02d",timeinfo.tm_year + 1900,timeinfo.tm_mon + 1,timeinfo.tm_mday);
   sprintf(timeS,"%02d:%02d:%02d",timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
-  //M5.Lcd.setTextColor(WHITE,BLACK);
-  //M5.Lcd.setCursor(0, 200, 1);
-//  M5.Lcd.println(dateStr + "   ");
-//  M5.Lcd.println(timeStr + "   ");
+  M5.Lcd.setCursor(0, 0); // カーソル
+  M5.Lcd.setTextSize(2);  // 文字サイズ
+  M5.Lcd.setTextColor(WHITE, BLACK);  // 色
+  M5.Lcd.printf("%s\n",dateS);
+  //M5.Lcd.println(" ");
 
-  M5.Lcd.println(dateS);
-  M5.Lcd.println(timeS);
+  M5.Lcd.setCursor(30, 18); // カーソル
+  M5.Lcd.setTextSize(5);  // 文字サイズ
+  M5.Lcd.printf("%s",timeS);
+
+  //M5.Lcd.setCursor(0, 0); // カーソル
+  //M5.Lcd.setTextSize(2);  // 文字サイズ
+  //M5.Lcd.printf("\n\n");
+
 
   //dateStr = String(dateS);  //これでいけるけど無駄なので整理
   //timeStr = String(timeS);
@@ -164,21 +178,66 @@ void loop() {
 
     char buff[128];
 
+
+
+
     // 温度、湿度、気圧をシリアル通信で送信
     Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
 
-    //LCD表示クリア＆色設定
-    M5.Lcd.setCursor(0, 0); // カーソル
-    M5.Lcd.setTextColor(WHITE, BLACK);  // 色
-    M5.Lcd.setTextSize(4);  // 文字サイズ
 
     // 時刻表示
     getTime();
-    M5.Lcd.printf("--------\n");
+    //M5.Lcd.printf("--------\n");
+
+    //M5.Lcd.setTextSize(2);  // 文字サイズ
+
+    //LCD表示クリア＆色設定
+    //M5.Lcd.setCursor(0, 60); // カーソル
+    M5.Lcd.setTextColor(WHITE, BLACK);  // 色
+    M5.Lcd.setTextSize(2);  // 文字サイズ
 
     // 温度、湿度、気圧、バッテリー情報
-    M5.Lcd.printf("Temp:%2.1f \nHumi:%2.0f%% \nPres:%2.0fhPa \nBatt: %d%%", tmp, hum, pressure,batt);
+    M5.Lcd.setCursor(0, 60); // カーソル
+    M5.Lcd.setTextColor(TEMP_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Temp:%2.1f", tmp);
 
+    M5.Lcd.setCursor(0, 80); // カーソル
+    M5.Lcd.setTextColor(HUME_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Humi:%2.0f%%", hum);
+
+    M5.Lcd.setCursor(140, 60); // カーソル
+    M5.Lcd.setTextColor(PRES_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Pres:%2.0fhPa", pressure);
+
+    M5.Lcd.setCursor(140, 80); // カーソル
+    M5.Lcd.setTextColor(BATT_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Batt: %d%%",batt);
+
+    //グラフ表示
+
+    pty = 240-(int)(tmp+20); // マイナス２０度が一番下になる。
+    phy = 240 - (int)(hum+50); // 
+    ppy = 240 - (int)(pressure - 950);
+    //pty = 120;
+
+    M5.Lcd.drawLine(px,240,px,120,BLACK); // まずライン消去
+    
+    M5.Lcd.drawPixel(px, pty, TEMP_COLOR );
+    M5.Lcd.drawPixel(px, phy, HUME_COLOR);
+    M5.Lcd.drawPixel(px, ppy, PRES_COLOR);
+    
+    M5.Lcd.fillTriangle(px-5, 100, px+5, 100, px, 110, WHITE);
+    M5.Lcd.drawLine(px-5-1,100,px-1, 115, BLACK);
+
+    px++;
+    if(px>319){
+      px=0;
+      M5.Lcd.fillTriangle(319-5, 100, 319+5, 100, 319, 110, BLACK);
+      M5.Lcd.drawLine(319,240,319,110,BLACK); // ライン消去
+    }
+
+    //M5.Lcd.printf(":%d",px);
+    
     //ログファイル出力
     if (FILEWRITE){
        LOG_WRITE_RATE_COUNT--;  //カウンタをデクリメント
@@ -195,13 +254,17 @@ void loop() {
 
        }
     }
-    
+
+    scc--;
+    if(scc<1){
+      scc=SCC_MAX;
+      M5.Lcd.setBrightness(10);
+    }
     // ボタンイベント処理
     //Aボタンを押したときに明るくするテスト。今はDELAYの切り替わりのタイミングでしか動作しない
     if (M5.BtnA.wasPressed()) {
       M5.Lcd.setBrightness(100);
-    } else {
-      M5.Lcd.setBrightness(10);
+      scc=SCC_MAX;
     }
     M5.update();
     
