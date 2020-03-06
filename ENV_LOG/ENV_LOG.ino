@@ -16,9 +16,13 @@ const char* fname = "/env_log.csv";
 // ループのウェイト、何秒待つかをミリ秒で指定
 const long DELAY = 60000;    // ミリ秒
 
+/*
 // WiFiの設定 （XXXのところを自分のWiFiの設定に）
 char ssid[] = "XXXXXXXXXXXXX";
 char pass[] = "XXXXXXXXXXXXX";
+*/
+
+const char* WiFiFile = "/wifi.csv";
 
 
 
@@ -53,12 +57,16 @@ void setup() {
     M5.Lcd.setBrightness(10);
 
     M5.Lcd.println("WiFi begin");
+    SetwifiSD(WiFiFile); // Get ssid
+/*
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       M5.Lcd.print(".");
     }
+    
     M5.Lcd.println("\nWiFi connected.");
+*/
   
     // timeSet
     getTimeFromNTP();
