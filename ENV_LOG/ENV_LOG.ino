@@ -45,16 +45,17 @@ const char* WiFiFile = "/wifi.csv";
 #define G_FLAME_COLOR  DARKGREY
 
 
-//グラフの描画レンジ設定
+//グラフの描画レンジ初期設定
 float TempMin = -10.0;
 float TempMax = 40.0;
-
 int HumMin =0;
 int HumMax =100;
-
 int PresMin = 950;
 int PresMax =1050;
 
+float Temp_ARRAY[321];
+int Hume_ARRAY[321];
+int Press_ARRAY[321];
 
 //グラフ用
 int16_t px = 0; // 表示用x座標
@@ -142,6 +143,20 @@ void setup() {
 
    // M5.Lcd.drawLine(0,0,320,240,BLUE); //表示枠確認テスト
 
+   //ARRAY初期化
+   int i=0;
+   while (i<321){
+      Temp_ARRAY[i]=-100.0; // プロットエリア外に出す
+      Hume_ARRAY[i]=-100;
+      Press_ARRAY[i]=-100;
+/*    // DYMMY     
+      Temp_ARRAY[i]=24.0;
+      Hume_ARRAY[i]=17;
+      Press_ARRAY[i]=1000;
+*/
+      i++;
+   }
+
 }
 
 void getTime(){
@@ -220,8 +235,6 @@ void loop() {
     char buff[128];
 
 
-
-
     // 温度、湿度、気圧をシリアル通信で送信
     Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
 
@@ -258,11 +271,19 @@ void loop() {
     long tx =3600*timeinfo.tm_hour + 60*timeinfo.tm_min+timeinfo.tm_sec;
     px = (int)(tx / 270);
 
+    //配列に保存
+    Temp_ARRAY[px] = tmp;
+    Hume_ARRAY[px] = hum;
+    Press_ARRAY[px] = pressure;
+
+
     //グラフ最大最小値表示
     M5.Lcd.setTextSize(1);  // 文字サイズ
     M5.Lcd.setCursor(0, 110); // カーソル
+    M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Hi:");
     M5.Lcd.setTextColor(TEMP_COLOR, BLACK);  // 色
-    M5.Lcd.printf("%2.1f", TempMax);
+    M5.Lcd.printf("%2.1fC", TempMax);
     M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
     M5.Lcd.printf("/");
     M5.Lcd.setTextColor(HUME_COLOR, BLACK);  // 色
@@ -273,8 +294,10 @@ void loop() {
     M5.Lcd.printf("%dhPa", PresMax);
 
     M5.Lcd.setCursor(0, 230); // カーソル
+    M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
+    M5.Lcd.printf("Lo:");
     M5.Lcd.setTextColor(TEMP_COLOR, BLACK);  // 色
-    M5.Lcd.printf("%2.1f", TempMin);
+    M5.Lcd.printf("%2.1fC", TempMin);
     M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
     M5.Lcd.printf("/");
     M5.Lcd.setTextColor(HUME_COLOR, BLACK);  // 色
@@ -284,6 +307,23 @@ void loop() {
     M5.Lcd.setTextColor(PRES_COLOR, BLACK);  // 色
     M5.Lcd.printf("%dhPa", PresMin);
 
+    //昨日のデータ表示
+    if(Hume_ARRAY[px+1]>-100){
+      M5.Lcd.setTextSize(1);
+      M5.Lcd.setCursor(160, 230); // カーソル
+      M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
+      M5.Lcd.printf("lastday:");
+      M5.Lcd.setTextColor(TEMP_COLOR, BLACK);  // 色
+      M5.Lcd.printf("%2.1fC", Temp_ARRAY[px+1]);
+      M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
+      M5.Lcd.printf("/");
+      M5.Lcd.setTextColor(HUME_COLOR, BLACK);  // 色
+      M5.Lcd.printf("%d%%", Hume_ARRAY[px+1]);
+      M5.Lcd.setTextColor( G_FLAME_COLOR, BLACK);  // 色
+      M5.Lcd.printf("/");
+      M5.Lcd.setTextColor(PRES_COLOR, BLACK);  // 色
+      M5.Lcd.printf("%dhPa", Press_ARRAY[px+1]);
+    }
 
     //グラフ表示(Y=110～240)の範囲でプロット
     //気温
@@ -373,21 +413,28 @@ void loop() {
       scc=SCC_MAX;
       M5.Lcd.setBrightness(10);
     }
+    
     // ボタンイベント処理
-    //Aボタンを押したときに明るくするテスト。今はDELAYの切り替わりのタイミングでしか動作しない
+    boolean btn_on_flg = false;
+    //Aボタンを押したら上限引き上げ
     if (M5.BtnA.wasPressed()) {
-      M5.Lcd.setBrightness(100);
-      scc=SCC_MAX;
+      btn_on_flg = true;
+      
+      //TempMin = tmp-15.0;
+      TempMax = TempMax+15.0;
+
+      //HumMin =hum-10;
+      HumMax =HumMax+10;
+
+      //PresMin = pressure - 20;
+      PresMax = PresMax + 20;
     }
 
 
-    // ボタンイベント処理
-    //Bボタンを押したらキャリブレーションする
+    //Bボタンを押したら中央値にキャリブレーションする
     if (M5.BtnB.wasPressed()) {
-      M5.Lcd.setBrightness(100);
-      scc=SCC_MAX;
+      btn_on_flg = true;
       
-      //M5.Lcd.printf("now:%2.1f/H:%2.1f/L:%2.1f",tmp,tmp+10.0,tmp-10.0);
       TempMin = tmp-15.0;
       TempMax = tmp+15.0;
 
@@ -396,8 +443,54 @@ void loop() {
 
       PresMin = pressure - 20;
       PresMax = pressure + 20;
-      
+
     }
+
+    //Cボタンを押したら加減引き下げ
+    if (M5.BtnC.wasPressed()) {
+      btn_on_flg = true;
+      
+      TempMin = TempMin-15.0;
+      //TempMax = tmp+15.0;
+
+      HumMin =HumMin-10;
+      //HumMax =hum+10;
+
+      PresMin = PresMin - 20;
+      //PresMax = pressure + 20;
+
+    }
+
+
+
+    if(btn_on_flg){
+      TmpRangeDelta = 130.0/(TempMax - TempMin);
+      HumRangeDelta = 130.0/(HumMax - HumMin);
+      PPreDelta = 130.0/(PresMax - PresMin);
+      
+      //枠内消去
+      M5.Lcd.fillRect(0, 110, 320, 240, BLACK);
+
+      int i=0;
+      while (i<320){
+          //気温
+          pty = 240+(int)(TempMin*TmpRangeDelta)-(int)(TmpRangeDelta * Temp_ARRAY[i]);
+          //湿度
+          phy = 240+(int)(HumMin*HumRangeDelta)-(int)(HumRangeDelta * Hume_ARRAY[i]);
+          //気圧
+          ppy = 240+(int)( PresMin*PPreDelta) - (int)(PPreDelta * Press_ARRAY[i]);
+          //各ポイントをプロット
+          M5.Lcd.drawPixel(i, pty, TEMP_COLOR );
+          M5.Lcd.drawPixel(i, phy, HUME_COLOR);
+          M5.Lcd.drawPixel(i, ppy, PRES_COLOR);
+        i++;
+      }
+
+      M5.Lcd.setBrightness(100);
+      scc=SCC_MAX;
+      btn_on_flg=false;
+    }
+
 
     
     
