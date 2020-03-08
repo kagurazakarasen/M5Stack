@@ -17,11 +17,10 @@
 boolean FILEWRITE = true;
 
 //保存ログファイルの上限(最大99)
-#define FILE_LOG_MAX 5
+#define FILE_LOG_MAX 30
 
 // 保存するファイル名
 char log_fname[20];
-//char* log_fname = "/env_log.csv";
 #define  LOG_fnameHead  "/envlog"
 #define  LOG_fnameExt  ".csv"
 int8_t LogF_Cnt = 0;
@@ -33,6 +32,7 @@ unsigned long int DELAY = 1000;    // ミリ秒
 unsigned int LOG_WRITE_RATE = 60;  // （秒）↓が割り切れる値にしてね。
 unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
+//WiFi設定ファイル名
 const char* WiFiFile = "/wifi.csv";
 
 
@@ -52,6 +52,10 @@ int HumMin =0;
 int HumMax =100;
 int PresMin = 950;
 int PresMax =1050;
+
+//ボタン操作で変化するグラフの縦幅
+#define TempRangeChangeSize 10.0
+#define PresRangeChangeSize 10
 
 float Temp_ARRAY[321];
 int Hume_ARRAY[321];
@@ -421,13 +425,13 @@ void loop() {
       btn_on_flg = true;
       
       //TempMin = tmp-15.0;
-      TempMax = TempMax+15.0;
+      TempMax = TempMax+ TempRangeChangeSize;
 
       //HumMin =hum-10;
-      HumMax =HumMax+10;
+      //HumMax =HumMax+10;
 
       //PresMin = pressure - 20;
-      PresMax = PresMax + 20;
+      PresMax = PresMax + PresRangeChangeSize;
     }
 
 
@@ -435,14 +439,16 @@ void loop() {
     if (M5.BtnB.wasPressed()) {
       btn_on_flg = true;
       
-      TempMin = tmp-15.0;
-      TempMax = tmp+15.0;
+      TempMin = tmp - TempRangeChangeSize;
+      TempMax = tmp + TempRangeChangeSize;
 
-      HumMin =hum-10;
-      HumMax =hum+10;
+      //HumMin = hum - 20;
+      //HumMax = hum + 20;
+      HumMin = 0;   // 湿度は変化させない
+      HumMax = 100;
 
-      PresMin = pressure - 20;
-      PresMax = pressure + 20;
+      PresMin = pressure - PresRangeChangeSize;
+      PresMax = pressure + PresRangeChangeSize;
 
     }
 
@@ -450,18 +456,16 @@ void loop() {
     if (M5.BtnC.wasPressed()) {
       btn_on_flg = true;
       
-      TempMin = TempMin-15.0;
+      TempMin = TempMin-TempRangeChangeSize;
       //TempMax = tmp+15.0;
 
-      HumMin =HumMin-10;
+      //HumMin =HumMin-10;
       //HumMax =hum+10;
 
-      PresMin = PresMin - 20;
+      PresMin = PresMin - PresRangeChangeSize;
       //PresMax = pressure + 20;
 
     }
-
-
 
     if(btn_on_flg){
       TmpRangeDelta = 130.0/(TempMax - TempMin);
@@ -469,7 +473,7 @@ void loop() {
       PPreDelta = 130.0/(PresMax - PresMin);
       
       //枠内消去
-      M5.Lcd.fillRect(0, 110, 320, 240, BLACK);
+      M5.Lcd.fillRect(0, 100, 320, 240, BLACK);
 
       int i=0;
       while (i<320){
@@ -490,9 +494,6 @@ void loop() {
       scc=SCC_MAX;
       btn_on_flg=false;
     }
-
-
-    
     
     M5.update();
     
