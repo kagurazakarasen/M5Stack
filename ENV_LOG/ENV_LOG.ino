@@ -1,3 +1,8 @@
+/*
+ * M5StackとENV UNITを使った環境ロガー
+ * https://github.com/kagurazakarasen/M5Stack
+ */
+
 #include <M5Stack.h>
 #include "DHT12.h"
 #include <Wire.h> //The DHT12 uses I2C comunication.
@@ -11,13 +16,13 @@
 // ファイル保存するかどうか。ファイルに保存するならここを true にする
 boolean FILEWRITE = true;
 
-//保存ログファイルの上限
+//保存ログファイルの上限(最大99)
 #define FILE_LOG_MAX 5
 
 // 保存するファイル名
 char log_fname[20];
 //char* log_fname = "/env_log.csv";
-#define  LOG_fnameHead  "/env_log"
+#define  LOG_fnameHead  "/envlog"
 #define  LOG_fnameExt  ".csv"
 int8_t LogF_Cnt = 0;
 
@@ -121,7 +126,7 @@ void setup() {
     }
 
     //ログファイル名セット
-    sprintf(log_fname,"%s%1d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
+    sprintf(log_fname,"%s%02d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
     M5.Lcd.printf("logFile:%s",log_fname);
     SD.remove(log_fname); //まず消しておく（appendされてしまうので）
 
@@ -249,7 +254,7 @@ void loop() {
     M5.Lcd.printf("Batt: %d%%",batt);
 
 
-    //グラフプロット用時間（X　　　　　ンン軸）セット
+    //グラフプロット用時間（X軸）セット
     long tx =3600*timeinfo.tm_hour + 60*timeinfo.tm_min+timeinfo.tm_sec;
     px = (int)(tx / 270);
 
@@ -309,7 +314,7 @@ void loop() {
         LogF_Cnt=0;
       }
       //ログファイル名セット
-      sprintf(log_fname,"%s%1d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
+      sprintf(log_fname,"%s%02d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
       M5.Lcd.printf("SetlogFile:%s",log_fname);
       SD.remove(log_fname); //まず消しておく（appendされてしまうので）
 
