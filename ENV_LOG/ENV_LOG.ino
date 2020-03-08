@@ -11,8 +11,15 @@
 // ファイル保存するかどうか。ファイルに保存するならここを true にする
 boolean FILEWRITE = true;
 
+//保存ログファイルの上限
+#define FILE_LOG_MAX 5
+
 // 保存するファイル名
-const char* fname = "/env_log.csv";
+char log_fname[20];
+//char* log_fname = "/env_log.csv";
+#define  LOG_fnameHead  "/env_log"
+#define  LOG_fnameExt  ".csv"
+int8_t LogF_Cnt = 0;
 
 // ループのウェイト、何秒待つかをミリ秒で指定
 unsigned long int DELAY = 1000;    // ミリ秒
@@ -22,6 +29,16 @@ unsigned int LOG_WRITE_RATE = 60;  // （秒）↓が割り切れる値にして
 unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 const char* WiFiFile = "/wifi.csv";
+
+
+//表示用色設定
+#define TEMP_COLOR  YELLOW
+#define HUME_COLOR  GREEN
+#define PRES_COLOR  LIGHTGREY
+#define BATT_COLOR  RED
+
+#define G_FLAME_COLOR  DARKGREY
+
 
 //グラフの描画レンジ設定
 #define TMP_MIN -10.0
@@ -34,15 +51,6 @@ const char* WiFiFile = "/wifi.csv";
 #define PRS_MAX 1050
 
 
-// === グローバル変数、定数
-DHT12 dht12; //Preset scale CELSIUS and ID 0x5c.
-Adafruit_BMP280 bme;
-
-#define TEMP_COLOR  YELLOW
-#define HUME_COLOR  GREEN
-#define PRES_COLOR  DARKGREY
-#define BATT_COLOR  RED
-
 //グラフ用
 int16_t px = 0; // 表示用x座標
 int16_t pty = 120; // 温度表示用y座標
@@ -52,6 +60,12 @@ int16_t ppy = 120; // 温度表示用y座標
 // スクリーンセーバー用カウンタ
 #define SCC_MAX 100
 int16_t scc = SCC_MAX;
+
+
+// === グローバル変数、定数
+DHT12 dht12; //Preset scale CELSIUS and ID 0x5c.
+    Adafruit_BMP280 bme;
+
 
 // === 関数プロトタイプ宣言
 uint8_t getBattery(uint16_t, uint16_t);
@@ -92,9 +106,12 @@ void setup() {
     }else{
       M5.Lcd.println("No Connect!");            
     }
-  
+
+
     Wire.begin();
-    
+
+    M5.Lcd.println("ENV Unit test...");
+
     // ENV Unit Check
     Serial.println(F("ENV Unit(DHT12 and BMP280) test..."));
 
@@ -102,13 +119,23 @@ void setup() {
       Serial.println("Could not find a valid BMP280 sensor, check wiring!");
       M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
     }
-    // LCD初期化
-    M5.Lcd.println("ENV Unit test...");
-    M5.Lcd.clear(BLACK);
 
+    //ログファイル名セット
+    sprintf(log_fname,"%s%1d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
+    M5.Lcd.printf("logFile:%s",log_fname);
+    SD.remove(log_fname); //まず消しておく（appendされてしまうので）
+
+    delay(1000);
+
+     
     // ログ書き込み用カウンタ
     LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
     if(LOG_WRITE_RATE_COUNT<1)LOG_WRITE_RATE_COUNT=1;
+
+    // LCD初期化
+    M5.Lcd.clear(BLACK);
+
+   // M5.Lcd.drawLine(0,0,320,240,BLUE); //表示枠確認テスト
 
 }
 
@@ -168,7 +195,7 @@ uint8_t getBattery() {
 void writeData(char *paramStr) {
   // SDカードへの書き込み処理（ファイル追加モード）
   // SD.beginはM5.begin内で処理されているので不要
-  file = SD.open(fname, FILE_APPEND);
+  file = SD.open(log_fname, FILE_APPEND);
   file.println((String)dateS + "," + (String)timeS + "," + paramStr);
   file.close();
 }
@@ -196,9 +223,8 @@ void loop() {
 
     // 時刻表示
     getTime();
-    //M5.Lcd.printf("--------\n");
 
-    //M5.Lcd.setTextSize(2);  // 文字サイズ
+
 
     //LCD表示クリア＆色設定
     //M5.Lcd.setCursor(0, 60); // カーソル
@@ -223,6 +249,16 @@ void loop() {
     M5.Lcd.printf("Batt: %d%%",batt);
 
 
+    //グラフプロット用時間（X　　　　　ンン軸）セット
+    long tx =3600*timeinfo.tm_hour + 60*timeinfo.tm_min+timeinfo.tm_sec;
+    px = (int)(tx / 270);
+
+    M5.Lcd.setCursor(0, 200); // カーソル
+    M5.Lcd.setTextSize(1);  // 文字サイズ
+//    M5.Lcd.printf("tx:%d\n", tx);
+//    M5.Lcd.printf("px:%d\n", px);
+
+
     //グラフ表示
     float TmpRangeDelta = 120.0/(TMP_MAX - TMP_MIN);
     float tmpY = TmpRangeDelta * tmp;
@@ -239,8 +275,19 @@ void loop() {
 
     //pty = 120;
 
-    M5.Lcd.drawLine(px+1,240,px+1,110,BLACK); // まずライン消去
-    
+    // まずライン消去
+    M5.Lcd.drawLine(px+1,240,px+1,110,BLACK); 
+
+    //グラフ枠プロット
+    M5.Lcd.drawRect(0, 110, 320, 240, G_FLAME_COLOR); //なぜか下のラインが出ない
+    M5.Lcd.drawLine(0,239,320,239,G_FLAME_COLOR); //下ライン
+
+    M5.Lcd.drawLine(160,110,160,240,G_FLAME_COLOR); //12時
+    M5.Lcd.drawLine(80,110,80,240,G_FLAME_COLOR); //6時
+    M5.Lcd.drawLine(240,110,240,240,G_FLAME_COLOR); //18時
+
+
+    //各ポイントをプロット
     M5.Lcd.drawPixel(px, pty, TEMP_COLOR );
     M5.Lcd.drawPixel(px, phy, HUME_COLOR);
     M5.Lcd.drawPixel(px, ppy, PRES_COLOR);
@@ -248,24 +295,25 @@ void loop() {
     M5.Lcd.fillTriangle(px-5, 100, px+5, 100, px, 110, WHITE);
     M5.Lcd.drawLine(px-5-1,100,px-1, 115, BLACK);
 
-    //時間
-    //long tx = timeinfo.tm_hour * 24 +timeinfo.tm_min*60+timeinfo.tm_sec;
-    long tx =3600*timeinfo.tm_hour + 60*timeinfo.tm_min+timeinfo.tm_sec;
-
-//    px++;
-    px = (int)(tx / 270);
-
-    M5.Lcd.setCursor(0, 200); // カーソル
-    M5.Lcd.setTextSize(1);  // 文字サイズ
-    M5.Lcd.printf("tx:%d\n", tx);
-    M5.Lcd.printf("px:%d\n", px);
 
     
-    
+    // 日付切り替わり    
     if(px>319){
       px=0;
-      M5.Lcd.fillTriangle(319-6, 100, 319+5, 100, 319, 110, BLACK);
+      M5.Lcd.fillTriangle(319-6, 100, 319, 100, 319, 110, BLACK);
       M5.Lcd.drawLine(319,240,319,110,BLACK); // ライン消去
+
+      //ログファイルローテーション処理
+      LogF_Cnt++;
+      if(LogF_Cnt>FILE_LOG_MAX){
+        LogF_Cnt=0;
+      }
+      //ログファイル名セット
+      sprintf(log_fname,"%s%1d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
+      M5.Lcd.printf("SetlogFile:%s",log_fname);
+      SD.remove(log_fname); //まず消しておく（appendされてしまうので）
+
+      
     }
 
     //M5.Lcd.printf(":%d",px);
@@ -287,6 +335,8 @@ void loop() {
        }
     }
 
+
+    // スクリーンセーバー処理
     scc--;
     if(scc<1){
       scc=SCC_MAX;
@@ -297,6 +347,19 @@ void loop() {
     if (M5.BtnA.wasPressed()) {
       M5.Lcd.setBrightness(100);
       scc=SCC_MAX;
+
+/*
+      //ログファイルローテーション処理
+      LogF_Cnt++;
+      if(LogF_Cnt>FILE_LOG_MAX){
+        LogF_Cnt=0;
+      }
+      //ログファイル名セット
+      sprintf(log_fname,"%s%1d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
+      M5.Lcd.printf("SetlogFile:%s",log_fname);
+      SD.remove(log_fname); //まず消しておく（appendされてしまうので）
+*/
+      
     }
     M5.update();
     

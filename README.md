@@ -10,9 +10,9 @@ UNV UNITを使った環境データのロギング
 
 詳しくは、
 https://note.com/rasen/n/naa51e575b0e4
-をご参照ください。
+をから始まる noteをご参照ください。
 
-ここに入れてある
+なお、ここに入れてある
 
 * Adafruit_Sensor.h
 * DHT12.cpp
@@ -27,3 +27,19 @@ https://github.com/nishizumi-lab
 https://github.com/nishizumi-lab/sample/tree/master/m5stack/bmp280/arduino/bmp280
 
 からいただいています。
+
+
+
+そのほか参考：
+
+M5Stack Library
+https://github.com/m5stack/M5Stack/blob/master/docs/getting_started_ja.md
+
+LCDまわり
+https://github.com/m5stack/m5-docs/blob/master/docs/ja/api/lcd.md
+
+※ M5.Lcd.drawRect(0, 110, 320, 240, G_FLAME_COLOR); //なぜか下のラインが出ない　※239にしても220や200にしても出ず。バグかな？
+
+
+Arduino 日本語リファレンス
+http://www.musashinodenpa.com/arduino/ref/index.php
