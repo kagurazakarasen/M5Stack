@@ -403,7 +403,7 @@ void loop() {
        if( LOG_WRITE_RATE_COUNT < 1 ){
          // M5.Lcd.printf("*");
 
-          sprintf(buff,"%2.1f ,%2.0f% ,%2.0f, %d%", tmp, hum, pressure,batt);
+          sprintf(buff,"%2.1f ,%2.1f% ,%2.2f, %d%", tmp, hum, pressure,batt);
           writeData(buff);
 
           // ログ書き込み用カウンタリセット
