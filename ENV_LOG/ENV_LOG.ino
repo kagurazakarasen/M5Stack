@@ -11,7 +11,7 @@
 #include <WiFi.h>
 #include <time.h>
 #include <string.h>
-
+#include <HTTPClient.h>
 
 // ファイル保存するかどうか。ファイルに保存するならここを true にする
 boolean FILEWRITE = true;
@@ -34,6 +34,43 @@ unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 
 //WiFi設定ファイル名
 const char* WiFiFile = "/wifi.csv";
+
+// Slack にログをポストするかどうか
+boolean SLACK_POST = true;
+
+//SlackのhookURL入りのファイル
+const char* Slackfname = "/slackhook.txt";
+
+const char *server = "hooks.slack.com";
+char *json = "{\"text\":\"ENV_LOG START\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}";
+
+const char* slack_root_ca= \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh\n" \
+"MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n" \
+"d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD\n" \
+"QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT\n" \
+"MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\n" \
+"b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG\n" \
+"9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB\n" \
+"CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97\n" \
+"nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt\n" \
+"43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P\n" \
+"T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4\n" \
+"gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO\n" \
+"BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR\n" \
+"TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw\n" \
+"DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr\n" \
+"hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg\n" \
+"06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF\n" \
+"PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls\n" \
+"YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk\n" \
+"CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=\n" \
+"-----END CERTIFICATE-----\n" ;
+   
+HTTPClient http;
+
+String services;
 
 
 //表示用色設定
@@ -129,6 +166,41 @@ void setup() {
       Serial.println("Could not find a valid BMP280 sensor, check wiring!");
       M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
     }
+
+    //Slack
+    unsigned int cnt = 0;
+    char data[128];
+    char *str;
+    File fp;
+
+
+
+    fp = SD.open(Slackfname, FILE_READ);
+    if(fp == false){  SLACK_POST = false;  }
+    
+    if(SLACK_POST){
+        while(fp.available()){
+          data[cnt++] = fp.read();
+        }
+        close(fp);
+    
+        String s = (String)data;
+    
+        int l = s.indexOf("/services/");
+        //M5.Lcd.println(l);  // 23のはず
+      
+        //M5.Lcd.print(s.substring(l));
+      
+        //String services = s.substring(l);
+        services = s.substring(l);
+        M5.Lcd.print(services);
+    
+        // Slack Post
+        http.begin( server, 443, services, slack_root_ca );
+        http.addHeader("Content-Type", "application/json" );
+        http.POST((uint8_t*)json, strlen(json));
+        M5.Lcd.println("post hooks.slack.com");
+    }  
 
     //ログファイル名セット
     sprintf(log_fname,"%s%02d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
@@ -237,7 +309,8 @@ void loop() {
     uint8_t batt = getBattery();
 
     char buff[128];
-
+    char jsonnow[128];
+    
 
     // 温度、湿度、気圧をシリアル通信で送信
     Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
@@ -409,6 +482,19 @@ void loop() {
           // ログ書き込み用カウンタリセット
           LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
           if(LOG_WRITE_RATE_COUNT<1)LOG_WRITE_RATE_COUNT=1;
+
+          //Slack Post
+          if( SLACK_POST ){
+              sprintf(jsonnow,"{\"text\":\"Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fhPa\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}", tmp, hum, pressure);
+              Serial.printf(jsonnow);
+          
+              // Slack Post
+              http.begin( server, 443, services, slack_root_ca );
+              http.addHeader("Content-Type", "application/json" );
+              http.POST((uint8_t*)jsonnow, strlen(jsonnow));
+              Serial.printf("post hooks.slack.com ");
+          }
+
 
        }
     }
