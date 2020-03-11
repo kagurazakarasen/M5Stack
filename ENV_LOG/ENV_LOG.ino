@@ -1,6 +1,10 @@
 /*
- * M5StackとENV UNITを使った環境ロガー
+ * M5StackとENV UNITを使った環境ロガーです
  * https://github.com/kagurazakarasen/M5Stack
+ * 
+ * 制作日記的なモノ：https://note.com/rasen/n/naa51e575b0e4
+ * 
+ * ＠神楽坂らせん
  */
 
 #include <M5Stack.h>
@@ -137,36 +141,7 @@ void getTimeFromNTP(){
   }
 }
 
-void setup() {
-    M5.begin();
-
-    //M5.Lcd.setBrightness(10);
-    M5.Lcd.setBrightness(100);
-
-    M5.Lcd.println("WiFi begin");
-
-    if(SetwifiSD(WiFiFile)){
-      M5.Lcd.println("Connect!");
-      // timeSet
-      getTimeFromNTP(); // コネクトしたらNTPを見に行く。（接続できなかったらtimeinfoが0になり、日付が1970/1/1になる）
-
-    }else{
-      M5.Lcd.println("No Connect!");            
-    }
-
-
-    Wire.begin();
-
-    M5.Lcd.println("ENV Unit test...");
-
-    // ENV Unit Check
-    Serial.println(F("ENV Unit(DHT12 and BMP280) test..."));
-
-    while (!bme.begin(0x76)){  
-      Serial.println("Could not find a valid BMP280 sensor, check wiring!");
-      M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
-    }
-
+void slack_init(){
     //Slack
     unsigned int cnt = 0;
     char data[128];
@@ -200,7 +175,63 @@ void setup() {
         http.addHeader("Content-Type", "application/json" );
         http.POST((uint8_t*)json, strlen(json));
         M5.Lcd.println("post hooks.slack.com");
+        http.end();
     }  
+
+}
+
+void slack_post(char *json_buf){
+        //Slack Post
+        if( SLACK_POST ){
+            //sprintf(jsonnow,"{\"text\":\"Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fhPa\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}", tmp, hum, pressure);
+            Serial.printf(json_buf);
+        
+            // Slack Post
+            http.begin( server, 443, services, slack_root_ca );
+            http.addHeader("Content-Type", "application/json" );
+            http.POST((uint8_t*)json_buf, strlen(json_buf));
+            Serial.printf("\n post hooks.slack.com\n");
+            http.end();
+        }
+
+}
+
+
+void setup() {
+    M5.begin();
+
+    //M5.Lcd.setBrightness(10);
+    M5.Lcd.setBrightness(100);
+
+    M5.Lcd.println("WiFi begin");
+
+    if(SetwifiSD(WiFiFile)){
+      M5.Lcd.println("Connect!");
+      // timeSet
+      getTimeFromNTP(); // コネクトしたらNTPを見に行く。（接続できなかったらtimeinfoが0になり、日付が1970/1/1になる）
+
+    }else{
+      M5.Lcd.println("No Connect!");            
+    }
+
+
+    Wire.begin();
+
+    M5.Lcd.println("ENV Unit test...");
+
+    // ENV Unit Check
+    Serial.println(F("ENV Unit(DHT12 and BMP280) test..."));
+
+    while (!bme.begin(0x76)){  
+      Serial.println("Could not find a valid BMP280 sensor, check wiring!");
+      M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
+    }
+
+
+
+    //Slack
+    slack_init();
+    
 
     //ログファイル名セット
     sprintf(log_fname,"%s%02d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);
@@ -309,7 +340,7 @@ void loop() {
     uint8_t batt = getBattery();
 
     char buff[128];
-    char jsonnow[128];
+    char jsonnow[255];
     
 
     // 温度、湿度、気圧をシリアル通信で送信
@@ -483,19 +514,14 @@ void loop() {
           LOG_WRITE_RATE_COUNT = DELAY/1000 * LOG_WRITE_RATE;
           if(LOG_WRITE_RATE_COUNT<1)LOG_WRITE_RATE_COUNT=1;
 
-          //Slack Post
-          if( SLACK_POST ){
-              sprintf(jsonnow,"{\"text\":\"Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fhPa\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}", tmp, hum, pressure);
-              Serial.printf(jsonnow);
-          
-              // Slack Post
-              http.begin( server, 443, services, slack_root_ca );
-              http.addHeader("Content-Type", "application/json" );
-              http.POST((uint8_t*)jsonnow, strlen(jsonnow));
-              Serial.printf("post hooks.slack.com ");
-          }
+          //Slack用json作成  
+          sprintf(jsonnow,"{\"text\":\"%04d/%02d/%02d  %02d:%02d:%02d  Temperature: %2.2f*C  Humidity: %0.2f%%  Pressure: %0.2fhPa\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}", \
+                          timeinfo.tm_year + 1900,timeinfo.tm_mon + 1,timeinfo.tm_mday, \
+                          timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, \
+                          tmp, hum, pressure);
 
-
+          slack_post(jsonnow);
+         
        }
     }
 
