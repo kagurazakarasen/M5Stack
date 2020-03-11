@@ -39,11 +39,14 @@ unsigned int LOG_WRITE_RATE_COUNT = 1; // DELAY/1000 * LOG_WRITE_RATE の値。
 //WiFi設定ファイル名
 const char* WiFiFile = "/wifi.csv";
 
+
+/*
 // Slack にログをポストするかどうか
 boolean SLACK_POST = true;
 
 //SlackのhookURL入りのファイル
 const char* Slackfname = "/slackhook.txt";
+
 
 const char *server = "hooks.slack.com";
 char *json = "{\"text\":\"ENV_LOG START\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}";
@@ -75,7 +78,7 @@ const char* slack_root_ca= \
 HTTPClient http;
 
 String services;
-
+*/
 
 //表示用色設定
 #define TEMP_COLOR  YELLOW
@@ -140,7 +143,7 @@ void getTimeFromNTP(){
     delay(1000);
   }
 }
-
+/*
 void slack_init(){
     //Slack
     unsigned int cnt = 0;
@@ -179,7 +182,9 @@ void slack_init(){
     }  
 
 }
+*/
 
+/*
 void slack_post(char *json_buf){
         //Slack Post
         if( SLACK_POST ){
@@ -195,7 +200,7 @@ void slack_post(char *json_buf){
         }
 
 }
-
+*/
 
 void setup() {
     M5.begin();
