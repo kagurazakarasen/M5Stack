@@ -90,6 +90,8 @@ void pw_off(){
   
 }
 
+bool BtFlg = false;
+
 // the loop routine runs over and over again forever
 void loop() {
 
@@ -147,7 +149,10 @@ void loop() {
     M5.Lcd.printf("Battery: %d%%  ",batt);
     //バッテリーが少なくなったら？
     if(batt == 25 ){
-        slack_post("{\"text\":\"そろそろバッテリーが切れそう！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+        if(BtFlg == false){
+            slack_post("{\"text\":\"そろそろバッテリーが切れそう！充電してください！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+            BtFlg=true;
+        } // 一度だけ
     }
 
     M5.Lcd.setTextSize(2);
