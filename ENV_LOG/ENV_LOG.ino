@@ -236,7 +236,8 @@ void setup() {
 
     //Slack
     slack_init();
-    
+    char *json = "{\"text\":\"Slack Send START\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}";
+    slack_post(json);
 
     //ログファイル名セット
     sprintf(log_fname,"%s%02d%s",LOG_fnameHead,LogF_Cnt,LOG_fnameExt);

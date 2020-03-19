@@ -75,7 +75,7 @@ void slack_init(){
         services = s.substring(l);
         M5.Lcd.print(services);
 
-
+/* // ここではつぶやかないことにする（init終わった後のメインルーチンでsendしたほうがよさそう）
         //sprintf(json,"{\"text\":\"Slack Send START\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}");
         char *json = "{\"text\":\"Slack Send START\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}";
         
@@ -85,6 +85,7 @@ void slack_init(){
         http.POST((uint8_t*)json, strlen(json));
         M5.Lcd.println("post hooks.slack.com");
         http.end();
+*/
     }  
 
 }
