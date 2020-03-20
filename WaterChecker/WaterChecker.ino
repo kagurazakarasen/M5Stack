@@ -11,12 +11,38 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+//mp3play用
+#include "AudioFileSourceSD.h"
+#include "AudioFileSourceID3.h"
+#include "AudioGeneratorMP3.h"
+#include "AudioOutputI2S.h"
+
+AudioGeneratorMP3 *mp3;
+AudioFileSourceSD *file;
+AudioOutputI2S *out;
+AudioFileSourceID3 *id3;
+
+
 //WiFi設定ファイル名
 const char* WiFiFile = "/wifi.csv";
 
 // デジタル入力PIN
 int D_IN_PIN = 26;  // プルアップされるので無入力で１
 
+
+
+void playMP3(char *filename){
+  file = new AudioFileSourceSD(filename);
+  id3 = new AudioFileSourceID3(file);
+  out = new AudioOutputI2S(0, 1); // Output to builtInDAC
+  out->SetOutputModeMono(true);
+  out->SetGain(1.0);
+  mp3 = new AudioGeneratorMP3();
+  mp3->begin(id3, out);
+  while(mp3->isRunning()) {
+    if (!mp3->loop()) mp3->stop();
+  }
+}
 
 // ================================================================== //
 // バッテリ残量取得
@@ -132,7 +158,8 @@ void loop() {
       M5.Lcd.printf("WET ! ");
       //slack_post("{\"text\":\"水がたまりました！\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}");
       slack_post("{\"text\":\"水がたまりました！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
-      M5.Speaker.beep(); //beep
+      //M5.Speaker.beep(); //beep
+      playMP3("/mp3sound.mp3");
       delay(1000);
 
     }else{
