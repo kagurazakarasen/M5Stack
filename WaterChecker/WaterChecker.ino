@@ -110,7 +110,7 @@ void pw_off(){
       M5.Lcd.setTextColor(TFT_DARKGREY, RED); 
       M5.Lcd.printf("OK Power off ! \r\n");
       M5.Speaker.end();
-      slack_post("{\"text\":\"電源offします。さようなら～\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+      slack_post("{\"text\":\"電源offします。\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
       delay(600);
       M5.powerOFF();
   
@@ -161,6 +161,7 @@ void loop() {
       //M5.Speaker.beep(); //beep
       playMP3("/mp3sound.mp3");
       delay(1000);
+      pw_off();
 
     }else{
       M5.Lcd.setTextColor(TFT_ORANGE, BLACK); 
