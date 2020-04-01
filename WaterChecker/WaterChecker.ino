@@ -22,6 +22,7 @@ AudioFileSourceSD *file;
 AudioOutputI2S *out;
 AudioFileSourceID3 *id3;
 
+long TargetTimeMS = 1800000;   // タイムアウトまでのミリ秒 1800000 = 30min * 60sec * 1000ms
 
 //WiFi設定ファイル名
 const char* WiFiFile = "/wifi.csv";
@@ -153,6 +154,15 @@ void loop() {
 
     M5.Lcd.setTextSize(4);
 
+
+    if( TargetTimeMS < millis()){ // 起動してからターゲットタイムまで時間がたっていたら、水がたまったフラグを立てて終了させる
+        //slack_post("{\"text\":\"タイムアウト！さようなら！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+        //pw_off();
+      M5.Lcd.printf("TIME OUT !");
+      Serial.printf("TIME OUT !" );
+      water_flg = 0;
+    }
+
     if( water_flg == 0 ){ // 0だったら水が来ている
       M5.Lcd.setTextColor(BLUE, BLACK); 
       M5.Lcd.printf("WET ! ");
@@ -182,6 +192,13 @@ void loop() {
             BtFlg=true;
         } // 一度だけ
     }
+
+    if(batt == 0){
+        slack_post("{\"text\":\"バッテリー切れ！さようなら！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+        pw_off();
+    }
+
+
 
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 200);
