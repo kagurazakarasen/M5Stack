@@ -1,4 +1,5 @@
 // MoStack CoreInk用、 NTPサーバから日時を取得、RTCを使って15秒ごとに時刻を表示
+// RTC系に CoreInkライブラリ 0.0.2 以降が必要
 
 #include "M5CoreInk.h"
 #include <WiFi.h>
@@ -6,6 +7,11 @@
 
 const String SSID = "";  // ← WiFiのSSIDを入れる
 const String WF_KEY = "";// ← WiFiのパスキーを入れる
+
+// 日付のゲット＆セット用のライブラリ内のTypo対策用。（0.0.1= Data / 0.0.2 = Date)
+#define GetData GetDate
+#define SetData SetDate
+
 
 static const char *wd[7] = {"Sun","Mon","Tue","Wed","Thr","Fri","Sat"};
 
@@ -23,13 +29,21 @@ char timeStrbuff[64];
 
 void flushTime(){
     M5.rtc.GetTime(&RTCtime);
-    M5.rtc.GetData(&RTCDate);
+    M5.rtc.GetData(&RTCDate); // 0.0.1ライブラリ用
+    //M5.rtc.GetDate(&RTCDate); // 0.0.2 ライブラリはこちら
     
     sprintf(timeStrbuff,"%d/%02d/%02d %02d:%02d:%02d",
                         RTCDate.Year,RTCDate.Month,RTCDate.Date,
                         RTCtime.Hours,RTCtime.Minutes,RTCtime.Seconds);
                                          
-    InkPageSprite.drawString(10,100,timeStrbuff);
+    
+    InkPageSprite.drawString(20,120,timeStrbuff,&AsciiFont8x16);
+
+
+    sprintf(timeStrbuff,"%02d:%02d", RTCtime.Hours,RTCtime.Minutes);
+
+    InkPageSprite.drawString(30,50,timeStrbuff,&AsciiFont24x48);
+    
     InkPageSprite.pushSprite();
 
     showTime(timeinfo);
@@ -147,9 +161,11 @@ void setup() {
             ESP.restart();
         }
       showTime(timeinfo);
+      /* ブザー：五月蠅いので止めておく
       M5.Speaker.tone(2700,200);
       delay(100);
       M5.Speaker.mute();
+      */
 
     if( !M5.M5Ink.isInit())
     {
@@ -168,6 +184,6 @@ void setup() {
 
 void loop() {
   flushTime();
-  
-  delay(15000);
+  delay(15000);     // 15秒 ホールド
+  M5.shutdown(45);  // 45秒 スリープ　USBがPCに刺さっている（電源が入っている）と機能せず。また、再起時に完全に初期状態から起動してしまう（setupから始まり、NTP読み込みもする。（しない場合はRTCがリセットされてしまう。うーむ）
 }
