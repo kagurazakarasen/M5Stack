@@ -107,7 +107,7 @@ void loop()
    // canvas.drawString("Hume:" + String(humStr) , 100, 200);
     //canvas.pushCanvas(0,300,UPDATE_MODE_A2);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
-    delay(60000);
+    delay(60000); // 一分待機（あとでスリープ処理すること）
 }
 
 // Function to extract numbers from compile time string
