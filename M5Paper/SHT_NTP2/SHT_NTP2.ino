@@ -23,6 +23,8 @@ float hum;
 
 int lineNum=0;
 
+File f;
+
 M5EPD_Canvas canvas(&M5.EPD);
 
 void WiFi_setup()
@@ -66,6 +68,15 @@ void setup()
     canvas.createCanvas(540,960);
     canvas.setTextSize(2);
 
+  // Start SD card
+  if (!SD.begin()) {
+    Serial.println("ERROR: SD CARD.");
+    canvas.drawString("NO SD CARD", 10, 100);
+    canvas.pushCanvas(0,0,UPDATE_MODE_A2);
+
+    // while (1) ;
+  }
+
     //WiFi
     WiFi_setup();
     NTP_setup();
@@ -100,14 +111,28 @@ void loop()
     Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%\r\n", tem, hum);
     dtostrf(tem, 2, 2 , temStr);
     dtostrf(hum, 2, 2 , humStr);
-    canvas.drawString(
-     String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
+
+    String lineStr = String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
      String(hh) + ":" + String(mm) + ":" + String(ss) +
-     " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr), 10, lineNum*16);
+     " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr);
+    canvas.drawString(lineStr , 10, lineNum*16);
    // canvas.drawString("Hume:" + String(humStr) , 100, 200);
     //canvas.pushCanvas(0,300,UPDATE_MODE_A2);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
+
+  // Open log file
+  f = SD.open("/testLog.txt", FILE_APPEND );
+  if (!f) {
+    Serial.printf("LOG FILE is NOT OPEN.");
+    //while (1) ;    
+  } else {
+    f.println(lineStr);
+  }
+    
+    //delay(1000); 
     delay(60000); // 一分待機（あとでスリープ処理すること）
+    //M5.Power.lightSleep(SLEEP_SEC(5)); // だめ。使えない
+    
 }
 
 // Function to extract numbers from compile time string
