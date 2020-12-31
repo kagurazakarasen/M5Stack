@@ -83,10 +83,38 @@ void setup()
     WiFI_off();
 }
 
+void Chk_battery()
+{
+  char buf[20];
+  uint32_t vol = M5.getBatteryVoltage();
+  if(vol < 3300)
+    {
+        vol = 3300;
+    }
+    else if(vol > 4350)
+    {
+        vol = 4350;
+    }
+    float battery = (float)(vol - 3300) / (float)(4350 - 3300);
+    if(battery <= 0.01)
+    {
+        battery = 0.01;
+    }
+    if(battery > 1)
+    {
+        battery = 1;
+    }
+    uint8_t px = battery * 25;
+    sprintf(buf, "BATT%d%%", (int)(battery * 100));
+    canvas.drawString(buf , 450, 0);
+}
+
 void loop()
 {
     lineNum++;
-    if(lineNum>960/16) lineNum=0;
+    if(lineNum>960/16) lineNum=1;
+
+    Chk_battery();
 
     //TimeCheck(NTP)
   struct tm timeinfo;
