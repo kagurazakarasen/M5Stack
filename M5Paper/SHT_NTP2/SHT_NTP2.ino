@@ -21,20 +21,26 @@ char humStr[10];
 float tem;
 float hum;
 
-int lineNum=0;
+//int lineNum=0;
 
-File f;
+File f,f2;
 
 M5EPD_Canvas canvas(&M5.EPD);
 
 void WiFi_setup()
 {
+  int i = 0;
       //connect to WiFi
         //WiFi.begin(ssid, password); // 最初はこちらで接続。
         WiFi.begin();                 // 一度接続が成功したらこちらでOK.
         while (WiFi.status() != WL_CONNECTED) {
+            i++;
             delay(500);
             Serial.print(".");
+            if(i>50){
+              Serial.println("TimeOut");
+              return;
+            }
         }
         Serial.println("CONNECTED");
 }
@@ -57,24 +63,91 @@ void WiFI_off()
     WiFi.mode(WIFI_OFF);
 }
 
-
-void setup()
+// WakeUp FLG set
+void f2set(int flg)
 {
-    M5.begin();
-    M5.SHT30.Begin();
-    //Serial.begin(115200);
-    M5.EPD.SetRotation(90);
-    M5.EPD.Clear(true);
-    canvas.createCanvas(540,960);
-    canvas.setTextSize(2);
+  // Open log file
+  f2 = SD.open("/wake.txt", FILE_WRITE );
+  if (!f2) {
+    Serial.printf("wake flag FILE is NOT OPEN.");
+  } else {
+    if(flg){
+      Serial.printf("SetSD to %d\n",flg);
+      f2.println(flg);
+    }else{
+      Serial.printf("SetSD to 0\n");
+      f2.println("0");
+    }
+  }
+  f2.close();
+}
 
+int f2get()
+{
+  String strBuf;
+  
+  f2 = SD.open("/wake.txt", FILE_READ );
+  if (!f2) {
+    Serial.printf("Wake FILE is NOT READ.");
+    return 0;
+  } else {
+
+  /* サイズ分ループ */
+    while(f2.available())
+    {
+      strBuf = strBuf + f2.readString();
+    }
+    /* ファイルクローズ */   
+    f2.close();
+    Serial.printf("Read from SD %s\n",strBuf);
+
+    if( strBuf.toInt()>0){
+      return strBuf.toInt();
+    }else{
+      return 0;
+    }
+
+  }
+  f2.close();
+  return 0;
+
+}
+
+void SD_init(){
   // Start SD card
   if (!SD.begin()) {
     Serial.println("ERROR: SD CARD.");
     canvas.drawString("NO SD CARD", 10, 100);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
+  }
 
-    // while (1) ;
+}
+
+void setup()
+{
+
+    int lineNum; // ライン数カウンタ、WakeUpのチェックに使用
+    M5.begin();
+//   M5.Power.begin();// M5.power関係つかえず＞＜
+    M5.SHT30.Begin();
+    //Serial.begin(115200);
+    M5.EPD.SetRotation(90);
+    //M5.EPD.Clear(true);
+    canvas.createCanvas(540,960);
+    canvas.setTextSize(2);
+
+  SD_init();
+  
+  lineNum=f2get();
+  if(lineNum<1){
+    M5.EPD.Clear(true);
+    canvas.drawString("ColdStart---", 0, 0);
+    canvas.pushCanvas(0,0,UPDATE_MODE_DU4);
+
+  }else{
+
+    canvas.drawString("OnLoopStart---" + String(lineNum) , 0, 0);
+    canvas.pushCanvas(0,0,UPDATE_MODE_DU4);
   }
 
     //WiFi
@@ -105,34 +178,41 @@ void Chk_battery()
         battery = 1;
     }
     uint8_t px = battery * 25;
-    sprintf(buf, "BATT%d%%", (int)(battery * 100));
+    sprintf(buf, "BATT%d%% ", (int)(battery * 100));
     canvas.drawString(buf , 450, 0);
 }
 
 void loop()
 {
+    int lineNum =  f2get();
     lineNum++;
-    if(lineNum>960/16) lineNum=1;
+    if(lineNum>960/16){
+      lineNum=1;
+      M5.EPD.Clear(true);
+    }
+    f2set(lineNum);
 
     Chk_battery();
 
     //TimeCheck(NTP)
+  bool NTP_ON = true;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
-    return;
+    NTP_ON = false;
+  } else {
+    YY = timeinfo.tm_year+1900;
+    MM = timeinfo.tm_mon+1;
+    DD = timeinfo.tm_mday;
+      
+    hh = timeinfo.tm_hour;
+    mm = timeinfo.tm_min;
+    ss = timeinfo.tm_sec;
+
+    Serial.printf("%2d %2d %2d",hh,mm,ss);
   }
 
-  YY = timeinfo.tm_year+1900;
-  MM = timeinfo.tm_mon+1;
-  DD = timeinfo.tm_mday;
-    
-  hh = timeinfo.tm_hour;
-  mm = timeinfo.tm_min;
-  ss = timeinfo.tm_sec;
-
-  Serial.printf("%2d %2d %2d",hh,mm,ss);
-
+    // SHT30
     M5.SHT30.UpdateData();
     tem = M5.SHT30.GetTemperature();
     hum = M5.SHT30.GetRelHumidity();
@@ -140,27 +220,32 @@ void loop()
     dtostrf(tem, 2, 2 , temStr);
     dtostrf(hum, 2, 2 , humStr);
 
-    String lineStr = String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
-     String(hh) + ":" + String(mm) + ":" + String(ss) +
-     " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr);
+    String lineStr;
+    lineStr = "";
+    if(NTP_ON){
+        lineStr = String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
+        String(hh) + ":" + String(mm) + ":" + String(ss);
+    } else {
+        lineStr = "Meybe +60sec after..";
+    }
+    lineStr = lineStr + " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr) + " ";
+
     canvas.drawString(lineStr , 10, lineNum*16);
-   // canvas.drawString("Hume:" + String(humStr) , 100, 200);
-    //canvas.pushCanvas(0,300,UPDATE_MODE_A2);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
 
   // Open log file
   f = SD.open("/testLog.txt", FILE_APPEND );
   if (!f) {
     Serial.printf("LOG FILE is NOT OPEN.");
-    //while (1) ;    
   } else {
     f.println(lineStr);
   }
     
-    //delay(1000); 
-    delay(60000); // 一分待機（あとでスリープ処理すること）
+    //delay(1000);
+    // 一分待機 
+    delay(5000);  // ５秒
     //M5.Power.lightSleep(SLEEP_SEC(5)); // だめ。使えない
-    
+    M5.shutdown(55);  // （電源無接続時のみ有効。電源ついてるかチェックしたいけれどやりかたわかんない＞＜）
 }
 
 // Function to extract numbers from compile time string
