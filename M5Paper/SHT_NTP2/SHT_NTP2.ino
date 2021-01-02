@@ -156,7 +156,7 @@ void setup()
     WiFI_off();
 }
 
-void Chk_battery()
+int Chk_battery()
 {
   char buf[20];
   uint32_t vol = M5.getBatteryVoltage();
@@ -177,9 +177,11 @@ void Chk_battery()
     {
         battery = 1;
     }
-    uint8_t px = battery * 25;
+    //uint8_t px = battery * 25;
     sprintf(buf, "BATT%d%% ", (int)(battery * 100));
     canvas.drawString(buf , 450, 0);
+
+    return (int)(battery * 100);
 }
 
 void loop()
@@ -192,7 +194,7 @@ void loop()
     }
     f2set(lineNum);
 
-    Chk_battery();
+    int btLebel = Chk_battery();
 
     //TimeCheck(NTP)
   bool NTP_ON = true;
@@ -226,10 +228,11 @@ void loop()
         lineStr = String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
         String(hh) + ":" + String(mm) + ":" + String(ss);
     } else {
-        lineStr = "Meybe +60sec after..";
+        lineStr = "Meybe +60sec after.";
     }
     lineStr = lineStr + " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr) + " ";
-
+    lineStr = lineStr + String(btLebel) + " ";
+       
     canvas.drawString(lineStr , 10, lineNum*16);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
 
@@ -244,6 +247,9 @@ void loop()
     //delay(1000);
     // 一分待機 
     delay(5000);  // ５秒
+    if(btLevel==1){ // 電源につないでいるとバッテリーレベルが１になる？？
+      delay(5000);  // ここを55秒とするとよさそう
+    }
     //M5.Power.lightSleep(SLEEP_SEC(5)); // だめ。使えない
     M5.shutdown(55);  // （電源無接続時のみ有効。電源ついてるかチェックしたいけれどやりかたわかんない＞＜）
 }
