@@ -27,6 +27,8 @@ File f,f2;
 
 M5EPD_Canvas canvas(&M5.EPD);
 
+#define SLEEP_SEC 60    // スリープ時間（秒） 5秒以上にすること。
+
 void WiFi_setup()
 {
   int i = 0;
@@ -228,7 +230,7 @@ void loop()
         lineStr = String(YY-208) + "/" + String(MM) + "/" + String(DD) + " " +
         String(hh) + ":" + String(mm) + ":" + String(ss);
     } else {
-        lineStr = "Meybe +60sec after.";
+        lineStr = "Meybe +" + String(SLEEP_SEC)  + "sec after.";
     }
     lineStr = lineStr + " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr) + " ";
     lineStr = lineStr + String(btLevel) + " ";
@@ -248,10 +250,12 @@ void loop()
     // 一分待機 
     delay(5000);  // ５秒
     if(btLevel==1){ // 電源につないでいるとバッテリーレベルが１になるので、それを利用して判定
-      delay(55000);  // バッテリー接続時にはディレイを＋55秒とする
+      //delay(55000);  // バッテリー接続時にはディレイを＋55秒とする
+      delay( (SLEEP_SEC - 5)*1000 );
     }
     //M5.Power.lightSleep(SLEEP_SEC(5)); // だめ。使えない
-    M5.shutdown(55);  // （電源無接続時のみ有効。電源ついてるかチェックしたいけれどやりかたわかんない＞＜）
+    //M5.shutdown(55);  // （電源無接続時のみ有効。電源ついてるかチェックしたいけれどやりかたわかんない＞＜）
+    M5.shutdown( SLEEP_SEC - 5 );
 }
 
 // Function to extract numbers from compile time string
