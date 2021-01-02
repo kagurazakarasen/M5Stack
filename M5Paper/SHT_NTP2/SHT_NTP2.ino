@@ -194,7 +194,7 @@ void loop()
     }
     f2set(lineNum);
 
-    int btLebel = Chk_battery();
+    int btLevel = Chk_battery();
 
     //TimeCheck(NTP)
   bool NTP_ON = true;
@@ -231,7 +231,7 @@ void loop()
         lineStr = "Meybe +60sec after.";
     }
     lineStr = lineStr + " Temp:" + String(temStr) + "C " + "Hume:" + String(humStr) + " ";
-    lineStr = lineStr + String(btLebel) + " ";
+    lineStr = lineStr + String(btLevel) + " ";
        
     canvas.drawString(lineStr , 10, lineNum*16);
     canvas.pushCanvas(0,0,UPDATE_MODE_A2);
@@ -247,8 +247,8 @@ void loop()
     //delay(1000);
     // 一分待機 
     delay(5000);  // ５秒
-    if(btLevel==1){ // 電源につないでいるとバッテリーレベルが１になる？？
-      delay(5000);  // ここを55秒とするとよさそう
+    if(btLevel==1){ // 電源につないでいるとバッテリーレベルが１になるので、それを利用して判定
+      delay(55000);  // バッテリー接続時にはディレイを＋55秒とする
     }
     //M5.Power.lightSleep(SLEEP_SEC(5)); // だめ。使えない
     M5.shutdown(55);  // （電源無接続時のみ有効。電源ついてるかチェックしたいけれどやりかたわかんない＞＜）
