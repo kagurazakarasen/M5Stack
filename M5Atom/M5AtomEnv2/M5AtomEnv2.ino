@@ -41,17 +41,14 @@ void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１�
   int range;
   long cc; // color
 
-
   if(tmp>-20){
     range=-2;
     cc = WHITE;
   }
-
   if(tmp>-10){
     range=-1;
     cc = WHITE;
   }
-
   if(tmp>0){
     range=0;
     cc = WHITE;
@@ -107,11 +104,8 @@ void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１�
 }
 
 
-
 void loop()
 {
-
-  long colr;
 
   pressure = bme.readPressure();
   if(sht30.get()==0){
@@ -119,12 +113,6 @@ void loop()
     hum = sht30.humidity;
   }
   Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
-
-/*
-  float tmp2 = (int)(tmp*10) / 10.0;  //小数点２位以下切り捨て
-  int tmp3 = (int)tmp2;  // 整数値
-  int tmp4 = (int)((tmp2 - (float)tmp3)*10.0);  //小数点以下（１桁）
-*/
 
     //LEDプロット。関数内ですべて処理
     TempDisp();
