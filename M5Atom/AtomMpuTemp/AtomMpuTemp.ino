@@ -1,17 +1,20 @@
 #include "M5Atom.h"
 #include <Wire.h>
 
-/* *** ENV2 Unit 使用時
-#include "Adafruit_Sensor.h"
-#include <Adafruit_BMP280.h>
-#include "SHT3X.h"
-SHT3X sht30;
-Adafruit_BMP280 bme;
+//#define ENV2_ON
 
-float tmp = 0.0;
-float hum = 0.0;
-float pressure = 0.0;
-*/
+#ifdef ENV2_ON
+  /**** ENV2 Unit 使用時 */
+  #include "Adafruit_Sensor.h"
+  #include <Adafruit_BMP280.h>
+  #include "SHT3X.h"
+  SHT3X sht30;
+  Adafruit_BMP280 bme;
+  
+  float tmp = 0.0;
+  float hum = 0.0;
+  float pressure = 0.0;
+#endif
 
 #define WHITE 0x707070
 #define GREEN 0xf00000
@@ -32,13 +35,13 @@ void setup()
     Wire.begin();
     delay(50);
 
-/*
+#ifdef ENV2_ON
     Serial.println(F("ENV Unit(SHT30 and BMP280) test..."));
     while (!bme.begin(0x76)){  
       Serial.println("Could not find a valid BMP280 sensor, check wiring!");
       M5.dis.drawpix(24, 0x00f000);  //Red
     }
-*/
+#endif
 
     //MPU6886
     if (M5.IMU.Init() != 0)
@@ -122,18 +125,21 @@ void loop()
     //Serial.printf("MPU Temp : %.2f C \r\n", MPUtemp);
   }
 
-/* // ENV2 Unit
+#ifdef ENV2_ON
   pressure = bme.readPressure();
   if(sht30.get()==0){
     tmp = sht30.cTemp;
     hum = sht30.humidity;
   }
-  */
+  
   //Serial.printf("SHT30 Temp: %2.2f*C  \r\n", tmp);
   //Serial.printf("SHT30 Temp: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
 
 //    Serial.printf("MPU:%.2f,SHT30:%.2f\r\n", MPUtemp,tmp);
-    Serial.printf("MPU:%.2f\r\n", MPUtemp);
+
+#endif
+
+    Serial.printf("MPU:%.2f,+OFFSET:%.2f\r\n", MPUtemp,MPUtemp+OFFSET);
 
 
     //LEDプロット。関数内ですべて処理
