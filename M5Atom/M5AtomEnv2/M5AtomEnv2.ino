@@ -83,7 +83,6 @@ void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１�
   Serial.printf("Temp3: %d \r\n", tmp3);
   Serial.printf("Temp4: %d \r\n", tmp4);  
 
-
   int i;
 
     // tt0～10
@@ -99,14 +98,11 @@ void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１�
     }else{
       M5.dis.drawpix(14+range, BLUE); 
     }
-
-    
+   
     for(i=0;i<tmp4;i++){
       M5.dis.drawpix(i+15, cc);
     }
     for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-
-
 
 }
 
@@ -124,152 +120,14 @@ void loop()
   }
   Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
 
-
+/*
   float tmp2 = (int)(tmp*10) / 10.0;  //小数点２位以下切り捨て
-
   int tmp3 = (int)tmp2;  // 整数値
-
   int tmp4 = (int)((tmp2 - (float)tmp3)*10.0);  //小数点以下（１桁）
-
-/*
-  Serial.printf("Temp2: %2.2f*C \r\n", tmp2);
-  Serial.printf("Temp3: %d*C \r\n", tmp3);
-  Serial.printf("Temp4: %d \r\n", tmp4);  
 */
 
-  int i;
-
-  //for(i=10;i<15;i++)  M5.dis.drawpix(i, BLACK);
-  //M5.dis.drawpix(11, 0x707070);  //White 小数点
-
-/*
-  if(tmp3<0){ // 氷点下時
-
-    if(tmp3<-10){ // マイナス10度以下
-       for(i=0;i<25+1;i++){
-        if(i<(tmp3*(-1))){
-          M5.dis.drawpix(i, 0x707070);  //White
-        }else{
-          M5.dis.drawpix(i, 0x0);  //BLK
-        }         
-       }
-    }else{
-      // -10.0 ～0.0
-      for(i=0;i<(tmp3*-1);i++){
-        M5.dis.drawpix(i, 0x707070);  //White
-      }
-      M5.dis.drawpix(10, BLUE);  //White 小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, 0x707070);  //White
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-    }
-    
-  } else { // プラス気温
-*/
-
+    //LEDプロット。関数内ですべて処理
     TempDisp();
-
-/*
-    if(tmp3>0 and tmp3<11){
-
-      TempDisp(tmp,WHITE);
-    }
-
-    if(tmp3>10 and tmp3<21){
-        TempDisp(tmp-10.0,BLUE);
-    }
-
-    if(tmp3>20 and tmp3<31){
-        TempDisp(tmp-20.0,GREEN);
-    }
-
-    if(tmp3>30 and tmp3<41){
-        TempDisp(tmp-30.0,RED);
-    }
-    if(tmp3>40 and tmp3<51){
-        TempDisp(tmp-40.0,RED);
-    }
-*/
-
-
-/*    
-    if(tmp3>0 and tmp3<11){
-      // 0度以上10度未満
-      for(i=0;i<11;i++){
-        if(i<tmp3) M5.dis.drawpix(i, WHITE);
-        else M5.dis.drawpix(i, BLACK);
-      }
-      M5.dis.drawpix(9, WHITE);  //小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, WHITE);
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-      //if(tmp3==0) M5.dis.drawpix(9, WHITE);
-    }
-
-
-    if(tmp3>10 and tmp3<21){
-      // 10度以上20度未満
-      for(i=0;i<11;i++){
-        if(i<tmp3-10) M5.dis.drawpix(i, BLUE);
-        else M5.dis.drawpix(i, BLACK);
-      }
-      M5.dis.drawpix(10, WHITE);  //小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, BLUE);
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-      //if(tmp3==10) M5.dis.drawpix(9, BLUE);
-    }
-
-    
-    if(tmp3>20 and tmp3<31){
-      // 20度以上30度未満
-      for(i=0;i<11;i++){
-        if(i<tmp3-20) M5.dis.drawpix(i, GREEN);
-        else M5.dis.drawpix(i, BLACK);
-      }
-      M5.dis.drawpix(11, WHITE);  //小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, GREEN);
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-      //if(tmp3==20) M5.dis.drawpix(9, GREEN);
-    }
-
-    
-    if(tmp3>30 and tmp3<41){
-      // 30度以上40度未満
-      for(i=0;i<11;i++){
-        if(i<tmp3-30) M5.dis.drawpix(i, RED);
-        else M5.dis.drawpix(i, BLACK);
-      }
-      M5.dis.drawpix(12, WHITE);  //小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, RED);
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-      //if(tmp3==30) M5.dis.drawpix(9, RED);
-    }
-
-    if(tmp3>40 and tmp3<51){
-      // 40度以上50度未満
-      for(i=0;i<11;i++){
-        if(i<tmp3-40) M5.dis.drawpix(i, RED);
-        else M5.dis.drawpix(i, BLACK);
-      }
-      M5.dis.drawpix(13, WHITE);  //小数点
-      for(i=0;i<tmp4;i++){
-        M5.dis.drawpix(i+15, RED);
-      }
-      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
-      //if(tmp3==30) M5.dis.drawpix(9, RED);
-    }
-
-*/
-    
-//  }
 
     if (M5.Btn.wasPressed())
     {
