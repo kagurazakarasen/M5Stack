@@ -33,8 +33,6 @@ void setup()
     M5.dis.drawpix(0, 0xf00000);
 }
 
-uint8_t FSM = 0;
-
 void loop()
 {
 
@@ -141,6 +139,20 @@ void loop()
         else M5.dis.drawpix(i, BLACK);
       }
       M5.dis.drawpix(12, WHITE);  //小数点
+      for(i=0;i<tmp4;i++){
+        M5.dis.drawpix(i+15, RED);
+      }
+      for(i=tmp4;i<11;i++) M5.dis.drawpix(i+15, BLACK);
+      //if(tmp3==30) M5.dis.drawpix(9, RED);
+    }
+
+    if(tmp3>40 and tmp3<51){
+      // 40度以上50度未満
+      for(i=0;i<11;i++){
+        if(i<tmp3-40) M5.dis.drawpix(i, RED);
+        else M5.dis.drawpix(i, BLACK);
+      }
+      M5.dis.drawpix(13, WHITE);  //小数点
       for(i=0;i<tmp4;i++){
         M5.dis.drawpix(i+15, RED);
       }
