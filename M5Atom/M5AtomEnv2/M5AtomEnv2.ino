@@ -17,6 +17,9 @@ float pressure = 0.0;
 #define YELLOW  0xf0f000
 #define BLACK 0x0
 
+bool IMU6886Flag = false;
+float MPUtemp = 0;
+
 
 void setup()
 {
@@ -30,55 +33,62 @@ void setup()
       Serial.println("Could not find a valid BMP280 sensor, check wiring!");
       M5.dis.drawpix(24, 0x00f000);  //Red
     }
+
+    //MPU6886
+    if (M5.IMU.Init() != 0)
+        IMU6886Flag = false;
+    else
+        IMU6886Flag = true;
+        
   
     M5.dis.drawpix(0, 0xf00000);
 }
 
-void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１９・・・
-
-  //tmpはグローバル、そこから計算できる
+void TempDisp(float ttt){
 
   int range;
   long cc; // color
 
-  if(tmp>-20){
+  if(ttt>-20){
     range=-2;
     cc = WHITE;
   }
-  if(tmp>-10){
+  if(ttt>-10){
     range=-1;
     cc = WHITE;
   }
-  if(tmp>0){
+  if(ttt>0){
     range=0;
     cc = WHITE;
   }
-  if(tmp>10){
+  if(ttt>10){
     range=1;
     cc = BLUE;
   }
-  if(tmp>20){
+  if(ttt>20){
     range=2;
     cc = GREEN;
   }
-  if(tmp>30){
+  if(ttt>30){
     range=3;
     cc = YELLOW;
   }
-  if(tmp>40){
+  if(ttt>40){
     range=4;
     cc = RED;
   }
   
-  float tt = tmp - range*10;
+  float tt = ttt - range*10;
   float tmp2 = (int)(tt*10) / 10.0;  //小数点２位以下切り捨て
   int tmp3 = (int)tmp2;  // 整数値
   int tmp4 = (int)((tmp2 - (float)tmp3)*10.0);  //小数点以下（１桁）
 
+/*
   Serial.printf("tt: %2.2f*C \r\n", tt);
   Serial.printf("Temp2: %2.2f \r\n", tmp2);
   Serial.printf("Temp3: %d \r\n", tmp3);
   Serial.printf("Temp4: %d \r\n", tmp4);  
+*/
 
   int i;
 
@@ -107,15 +117,25 @@ void TempDisp(){  // rangeは10の位の数。０＝0～９、1＝１０～１�
 void loop()
 {
 
+  if (IMU6886Flag == true){
+    M5.IMU.getTempData(&MPUtemp);
+    //Serial.printf("MPU Temp : %.2f C \r\n", MPUtemp);
+  }
+
+
   pressure = bme.readPressure();
   if(sht30.get()==0){
     tmp = sht30.cTemp;
     hum = sht30.humidity;
   }
-  Serial.printf("Temperatura: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
+  //Serial.printf("SHT30 Temp: %2.2f*C  \r\n", tmp);
+  //Serial.printf("SHT30 Temp: %2.2f*C  Humedad: %0.2f%%  Pressure: %0.2fPa\r\n", tmp, hum, pressure);
+
+    Serial.printf("MPU:%.2f,SHT30:%.2f\r\n", MPUtemp,tmp);
+
 
     //LEDプロット。関数内ですべて処理
-    TempDisp();
+    TempDisp(MPUtemp);
 
     if (M5.Btn.wasPressed())
     {
