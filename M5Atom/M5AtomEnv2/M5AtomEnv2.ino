@@ -20,11 +20,12 @@ float pressure = 0.0;
 bool IMU6886Flag = false;
 float MPUtemp = 0;
 
+//MPU6886の温度センサ測定値のオフセット温度
+#define OFFSET -13.5
 
 void setup()
 {
     M5.begin(true, false, true);
-//    M5.Power.begin();
     Wire.begin();
     delay(50);
 
@@ -83,13 +84,6 @@ void TempDisp(float ttt){
   int tmp3 = (int)tmp2;  // 整数値
   int tmp4 = (int)((tmp2 - (float)tmp3)*10.0);  //小数点以下（１桁）
 
-/*
-  Serial.printf("tt: %2.2f*C \r\n", tt);
-  Serial.printf("Temp2: %2.2f \r\n", tmp2);
-  Serial.printf("Temp3: %d \r\n", tmp3);
-  Serial.printf("Temp4: %d \r\n", tmp4);  
-*/
-
   int i;
 
     // tt0～10
@@ -135,7 +129,7 @@ void loop()
 
 
     //LEDプロット。関数内ですべて処理
-    TempDisp(MPUtemp);
+    TempDisp(MPUtemp + OFFSET);
 
     if (M5.Btn.wasPressed())
     {
