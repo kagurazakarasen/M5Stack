@@ -27,7 +27,7 @@ bool IMU6886Flag = false;
 float MPUtemp = 0;
 
 //MPU6886の温度センサ測定値のオフセット温度
-#define OFFSET -13.5
+#define OFFSET -16.0
 
 void setup()
 {
