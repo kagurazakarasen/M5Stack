@@ -129,7 +129,8 @@ void loop()
 
 
     //LEDプロット。関数内ですべて処理
-    TempDisp(MPUtemp + OFFSET);
+    //TempDisp(MPUtemp + OFFSET); //MPUを表示
+    TempDisp(tmp);  // SHT30側を表示
 
     if (M5.Btn.wasPressed())
     {
