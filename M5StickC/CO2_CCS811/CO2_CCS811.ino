@@ -1,6 +1,6 @@
 // M5STICK-Cで、CCS811のセンサーの値を取得する
 // Original Programed by Kazuyuki Eguchi
-// Modifi Version vi Rasen Kagurazaka
+// Modifi Version by Rasen Kagurazaka
  
 #include <M5StickC.h>
 #include <Wire.h>
@@ -21,7 +21,6 @@ void setup() {
    
   Wire.begin(0,26);  // SDA-G0,SCL-G26  <-逆でした！＞＜
 
-
   /*--- このチェックルーチンはエラーで動作せず
   CCS811Core::status returnCode = myCCS811.begin();
   if (returnCode != CCS811Core::SENSOR_SUCCESS) {
@@ -36,7 +35,6 @@ void setup() {
     while (1)
       ;
   }
-
 
 }
  
@@ -64,7 +62,6 @@ void loop() {
     }
 
 
- 
     M5.Lcd.setCursor(0, 0);
     M5.Lcd.print("Co2= ");
     M5.Lcd.print(co2);
