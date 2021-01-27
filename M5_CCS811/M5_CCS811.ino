@@ -1,3 +1,8 @@
+/** M5 Stack にCCS811をつないでCo2を測定する
+ *  　オリジナル（参考にした）サイトURL:https://qiita.com/cami_oshimo/items/78d1d535a6468f3f6d79
+ *  　このプログラムの説明ナド：https://note.com/rasen/n/na554013133bd
+ **/
+
 #include <M5Stack.h>
 #include <Wire.h>
 #include <SparkFunCCS811.h> //Click here to get the library: http://librarymanager/All#SparkFun_CCS811
