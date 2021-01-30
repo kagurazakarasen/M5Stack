@@ -130,5 +130,5 @@ void loop() {
   // Ambient送出
   ambient.send();
  
-  delay(5000);
+  delay(60000); // 一分やすみ
 }
