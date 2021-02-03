@@ -121,7 +121,7 @@ void loop() {
 
   M5.Lcd.drawString("eCO2:",   10, 60, 4);
 
-  /*
+  
   //eCO2 Color
   M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
   if(sgp.eCO2>600){
@@ -133,11 +133,11 @@ void loop() {
   if(sgp.eCO2>2000){
      M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
   }
-  */
+  
   
   M5.Lcd.setTextDatum(TR_DATUM);  // top_right
-  //M5.Lcd.drawNumber(sgp.eCO2, 220, 60, 6);
-  M5.Lcd.drawNumber(sgp.eCO2, 220, 60, 4);
+  M5.Lcd.drawNumber(sgp.eCO2, 220, 60, 6);
+  //M5.Lcd.drawNumber(sgp.eCO2, 220, 60, 4);
   M5.Lcd.setTextDatum(TL_DATUM);  // top_left
   M5.Lcd.drawString("ppm",    240, 60, 4);
 
@@ -154,7 +154,7 @@ void loop() {
   Serial.printf("Temp:%2.2f,Hume:%0.2f,Press:%0.2f\n", tmp, hum, pressure/100);
 
   char buf[60];
-  /*
+  
   //Temp Color
   M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
   if(tmp>3.0){
@@ -169,7 +169,7 @@ void loop() {
   if(tmp>30.0){
      M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
   }
-  */
+  
 
   sprintf(buf,"Temp : %2.2f *C",tmp);
   M5.Lcd.drawString(buf,   10, 120, 4);
