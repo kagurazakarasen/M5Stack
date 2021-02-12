@@ -1,5 +1,5 @@
 /*
-    note: need add library Adafruit_BMP280 from library manage
+    M5Stick-C用、TVOC/eCO2(SGP30)Unit
 */
 
 #include <M5StickC.h>
@@ -9,9 +9,14 @@ Adafruit_SGP30 sgp;
 
 void setup() {
     M5.begin();
-    Wire.begin(32, 33, 100000);
-    M5.Lcd.setRotation(3);
-
+    M5.Axp.ScreenBreath(9); // バックライトの明るさ(7-15)
+    Wire.begin(32, 33, 100000); // ← M5StickCのI2CはSDA-G32、SLC-G33
+    M5.Lcd.setRotation(1);
+    M5.Lcd.fillScreen(TFT_BLACK);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setTextColor(TFT_WHITE);
+    M5.Lcd.setCursor(0, 0);
+  
     //Serial.begin(115200);
     Serial.println("SGP30 test");
     if (! sgp.begin()){
@@ -27,13 +32,35 @@ void setup() {
 }
 
 void loop() {
- 
+
+  unsigned long sec = millis() / 1000;
+
+  
   if (! sgp.IAQmeasure()) {
     Serial.println("Measurement failed");
     return;
   }
   Serial.print("TVOC "); Serial.print(sgp.TVOC); Serial.print(" ppb\t");
   Serial.print("eCO2 "); Serial.print(sgp.eCO2); Serial.println(" ppm");
+
+
+  M5.Lcd.fillScreen(TFT_BLACK);
+
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.print("eCO2:");
+    M5.Lcd.print(sgp.eCO2);
+    M5.Lcd.println(" ppm");
+    M5.Lcd.println("");
+ 
+    M5.Lcd.print("TVOC:");
+    M5.Lcd.print(sgp.TVOC);
+    M5.Lcd.println(" ppb");
+     
+/*
+    M5.Lcd.print("Time= ");
+    M5.Lcd.print(sec);
+    M5.Lcd.println(" sec");
+*/  
 
 
     delay(1000);
