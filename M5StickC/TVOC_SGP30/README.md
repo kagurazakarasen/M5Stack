@@ -1,5 +1,10 @@
 # M5StickC用に最小構成でeCO2を計れるようにしたもの
 
+## 説明記事
+
+https://note.com/rasen/n/nfaaf7595d0b2
+
+
 ## つかうもの
 
 * M5Stick-C
