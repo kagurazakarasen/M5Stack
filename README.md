@@ -59,10 +59,7 @@ slackhook.txt  を作成、取得したWebhook URLをそのまま記入します
 
 
 
-
-
-
-そのほか参考：
+### そのほか参考：
 
 M5Stack Library
 https://github.com/m5stack/M5Stack/blob/master/docs/getting_started_ja.md
@@ -70,8 +67,28 @@ https://github.com/m5stack/M5Stack/blob/master/docs/getting_started_ja.md
 LCDまわり
 https://github.com/m5stack/m5-docs/blob/master/docs/ja/api/lcd.md
 
-※ M5.Lcd.drawRect(0, 110, 320, 240, G_FLAME_COLOR); //なぜか下のラインが出ない　※239にしても220や200にしても出ず。バグかな？
-
 
 Arduino 日本語リファレンス
 http://www.musashinodenpa.com/arduino/ref/index.php
+
+
+
+---
+
+### M5Stack関連の記事ナド
+
+https://note.com/rasen/m/m2bfb6db23200
+
+---
+
+### ディレクトリ構成について
+
+基本、M5_hogehoge と、アンダーバーでつながっているディレクトリ内には、hogehogeというユニット（センサ）を M5Stackにくっつけてつかうものです。
+
+M5が頭についていないディレクトリ (ENVLOGナド) は、その名前のプロジェクト用のディレクトリ。
+
+M5StickCナドの名前になっているディレクトリは、本体をM5StickCにして、下位ディレクトリにそれぞれのプロジェクトをいれてあります。
+
+---
+
+もちろん、どのプログラム・スケッチについても無保証です。（ハードもライブラリもがんがん進化してしまうので、古い奴はそのままではうごかないかも？）
