@@ -15,6 +15,12 @@
 WiFiClient client;
 Ambient ambient;
 
+#define RGB_BAR_ON
+
+#ifdef RGB_BAR_ON
+#include <Adafruit_NeoPixel.h>
+#endif
+
 
 //ENV_II
 #include "Adafruit_Sensor.h"
@@ -29,7 +35,14 @@ float pressure = 0.0;
 //
 
 
+#ifdef RGB_BAR_ON
 
+// RGB_BAR
+#define M5STACK_FIRE_NEO_NUM_LEDS 10
+#define M5STACK_FIRE_NEO_DATA_PIN 15
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(M5STACK_FIRE_NEO_NUM_LEDS, M5STACK_FIRE_NEO_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+#endif
 
 Adafruit_SGP30 sgp;
 int i = 15;
@@ -52,7 +65,7 @@ void header(const char *string, uint16_t color)
 
 void setup() {
   M5.begin(true, false, true, true);
-  header("SGP30 and ENV2 ",TFT_BLACK);
+  header("Air sensor",TFT_BLACK);
   //Serial.begin(115200);
   Serial.println("SGP30 and ENV2 test");
   
@@ -88,9 +101,15 @@ void setup() {
 
   M5.Lcd.drawString("Initialization...", 40, 200, 4);
 
+#ifdef RGB_BAR_ON
 
+  pixels.begin(); 
 
-
+  for(int i=1;i<9;i++){
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));     
+  }
+  pixels.show();
+#endif
 }
 
 void loop() {
@@ -111,7 +130,7 @@ void loop() {
     return;
   }
 
-  M5.Lcd.fillRect(100, 40, 220, 70, TFT_BLACK);
+  M5.Lcd.fillRect(0, 40, 220, 70, TFT_BLACK);
 
   M5.Lcd.drawString("TVOC:",   10, 40, 4);
   M5.Lcd.setTextDatum(TR_DATUM);  // top_right
