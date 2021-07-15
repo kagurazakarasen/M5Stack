@@ -76,7 +76,7 @@ void setup(){
    M5.Power.begin();
    
     M5.Lcd.println("WiFi begin");
-
+    delay(2000);  // SD周りの起動に時間がかかる模様
     if(SetwifiSD(WiFiFile)){
       M5.Lcd.println("Connect!");
       //M5.Speaker.tone(661, 200); 
@@ -166,11 +166,12 @@ void loop() {
     if( water_flg == 0 ){ // 0だったら水が来ている
       M5.Lcd.setTextColor(BLUE, BLACK); 
       M5.Lcd.printf("WET ! ");
-      //slack_post("{\"text\":\"水がたまりました！\",\"icon_emoji\":\":ghost:\",\"username\":\"m5stackpost\"}");
-      slack_post("{\"text\":\"水がたまりました！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
-      //M5.Speaker.beep(); //beep
+      Serial.printf("MP3Play!\n" );
       playMP3("/mp3sound.mp3");
+      Serial.printf("Played!\n" );
       delay(1000);
+      //slack_post("{\"text\":\"水がたまりました！\",\"icon_emoji\":\":ghost:\",\"username\":\"水ボトル監視君\"}");
+      //M5.Speaker.beep(); //beep
       pw_off();
 
     }else{
